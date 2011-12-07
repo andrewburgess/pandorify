@@ -1,0 +1,12 @@
+#container {
+	margin: 20px auto;
+	width: 600px;
+}
+
+#header {
+	text-align: center;
+}
+
+#header h1 {
+	font-size: 20px;
+}

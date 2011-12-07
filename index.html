@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>My First App</title>
+    <link rel="stylesheet" href="sp://import/css/adam.css" />
+	<link rel="stylesheet" href="css/style.css" />
+	
+	<script src="js/jquery-1.7.1.min.js"></script>
+	<script type="text/javascript">
+		sp = getSpotifyApi(1);
+		var app = sp.require("js/pandorify");
+		app.init();
+	</script>
+</head>
+<body>
+	<div id="container">
+		<div id="header">
+			<h1>Pandorify</h1>
+		</div>
+	</div>
+</body>
+</html>
