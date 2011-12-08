@@ -62,3 +62,27 @@ function checkResponse(data) {
 	
 	return false;
 }
+
+function getImage(data) {
+	var type = data.type || ((data.canonicalUsername || data.facebookUid) ? "user" : "");
+
+	switch	(type) {
+		case "artist":
+			return data.portrait ? data.portrait : "sp://import/img/placeholders/20-artist.png";
+		case "album":
+			return data.cover ? data.cover : "sp://import/img/placeholders/20-album.png";
+		case "track":
+			return data.album.cover ? data.album.cover : "sp://import/img/placeholders/20-track.png";
+		case "playlist":
+			if (data.cover) {
+				return data.cover.replace(/spotify:mosaic:([^;]{40}?).*/, "spotify:image:$1");
+			}
+			else {
+				return "sp://import/img/placeholders/20-playlist.png";
+			}
+		case "user":
+			return data.picture ? data.picture : "sp://import/img/placeholders/20-artist.png";
+		default:
+			return data.image ? data.image : "";
+	}
+}
