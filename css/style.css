@@ -1,12 +1,22 @@
 #container {
 	margin: 20px auto;
-	width: 600px;
+	width: 90%;
 }
 
 #header {
 	text-align: center;
+	margin-bottom: 20px;
 }
 
 #header h1 {
 	font-size: 20px;
+}
+
+#radio-controller {
+	background-color: #666;
+	padding: 20px;
+}
+
+#artist-radio-container {
+	width: 250px;
 }

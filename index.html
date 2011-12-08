@@ -9,14 +9,28 @@
 	<script src="js/jquery-1.7.1.min.js"></script>
 	<script type="text/javascript">
 		sp = getSpotifyApi(1);
+		jQuery.ajaxSettings.traditional = true;
+		
 		var app = sp.require("js/pandorify");
 		app.init();
+		
+		$(document).ready(function () {
+			$("#create-station").click(function () {
+				app.createStation($("#artist-radio").val());
+			});
+		});
+		
 	</script>
 </head>
 <body>
 	<div id="container">
 		<div id="header">
 			<h1>Pandorify</h1>
+		</div>
+		<div id="radio-controller">
+			<div id="artist-radio-container">
+				<input id="artist-radio" type="text" class="textbox" /> <div id="create-station" class="button" style="float:right">Create Station</div>
+			</div>
 		</div>
 	</div>
 </body>

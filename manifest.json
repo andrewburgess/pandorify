@@ -8,5 +8,7 @@
     },
     "SupportedLanguages": [
         "en"
-    ]
+    ],
+	"RequiredPermissions": [
+		"http://*.echonest.com"
 }
