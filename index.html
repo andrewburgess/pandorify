@@ -12,12 +12,15 @@
 		sp = getSpotifyApi(1);
 		
 		var app = sp.require("js/pandorify");
-		app.init();
+		app.init(jQuery);
 		
 		$(document).ready(function () {
 			$("#create-station").click(function () {
 				app.createStation($("#artist-radio").val());
 			});
+			
+			var d = new Date();
+			$("#timestamp").html(d.getTime());
 		});
 		
 	</script>
@@ -33,5 +36,6 @@
 			</div>
 		</div>
 	</div>
+	<div id="timestamp"></div>
 </body>
 </html>

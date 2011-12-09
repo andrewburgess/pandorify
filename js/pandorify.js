@@ -6,63 +6,111 @@ exports.createStation = createStation;
 var echonestKey = "HRKVFLJESXBJLUDBQ";
 var currentTrack = null;
 var nextTrack = null;
+var jquery = null;
+var playlist = null;
 
-function init() {
-	console.log("init");
-	console.log(sp.trackPlayer);
+function init(j) {
+	jquery = j;
+	
+	playlist = sp.core.getTemporaryPlaylist("Pandorify");
 }
 
 function onTrackChanged(event) {
-	console.log(event);
+	console.log("SPOTIFY: onTrackChanged Event", event);
 	
 	if (event.data.curtrack == true && sp.trackPlayer.getIsPlaying() == false) {
-		console.log("Getting next track");
-		getNextTrack({"session_id": localStorage.getItem("SessionId")});
+		console.log("PANDORIFY: Getting next track");
+		getNextTrack();
 	}
 }
 
 function createStation(artist) {
-	console.log("Create Station: " + artist);
+	console.log("PANDORIFY: Create Station: " + artist);
+	localStorage.removeItem("SessionId");
 	
 	if (artist.length == 0)
 		return;
 
-	getNextTrack({'artist': artist, 'type': 'artist-radio'});
+	makeRequest("playlist/dynamic", {"artist": artist, "type": "artist-radio"}, function (data) {
+		findTrackOnSpotify(data);
+		setTimeout(function () {getNextTrack();}, 2 * 1000);
+	});
 
 	sp.trackPlayer.addEventListener("playerStateChanged", onTrackChanged);
 }
 
-function getNextTrack(args) {
-	args.api_key = echonestKey;
-	args.format = "json";
-	$.getJSON("http://developer.echonest.com/api/v4/playlist/dynamic", args, 
-		function (data) {
-			if (checkResponse(data)) {
-				console.log("Session ID: " + data.response.session_id);
-				localStorage.setItem("SessionId", data.response.session_id);
-				var song = data.response.songs[0];
-				
-				console.log("Received track: " + song.artist_name + " - " + song.title);
-				var query = song.artist_name + " " + song.title;
-				console.log("Searching for " + query);
-				sp.core.search(query, true, true, {
-					onSuccess: function (result) {
-						console.log(result);
-						if (result.tracks.length > 0) {
-							console.log(result.tracks[0].uri);
-							
-							playTrack(result.tracks[0].uri);
-						} else {
-							console.log("No results found")
-						}
-					},
-					onFailure: function() {
-						console.error("Search failed");
-					}
-				});
+function findTrackOnSpotify(data, errorCallback) {
+	console.info("ECHONEST: Session ID - " + data.session_id);
+	localStorage.setItem("SessionId", data.session_id);
+	
+	var song = data.songs[0];
+	var query = song.artist_name + " " + song.title;
+	sp.core.search(query, true, true, {
+		onSuccess: function (result) {
+			console.log("SPOTIFY: Search results for " + query, result);
+			if (result.tracks.length > 0) {
+				console.log("SPOTIFY: Adding track to playlist", result.tracks[0]);
+				playlist.add(result.tracks[0].uri);
+				if (sp.trackPlayer.getIsPlaying() == false) {
+					console.log("SPOTIFY: Starting temporary playlist", playlist);
+					playPlaylist(playlist.uri);
+				}
 			} else {
-				console.log("Problem fetching results");
+				consol.warn("SPOTIFY: No results found");
+				if (isFunction(errorCallback)) {
+					errorCallback();
+				}
 			}
+		},
+		onFailure: function () {
+			console.error("SPOTIFY: Search failed for " + query);
+			if (isFunction(errorCallback))
+				errorCallback();
+		}
+	});
+}
+
+function getNextTrack(callback) {
+	makeRequest("playlist/dynamic", {"session_id": localStorage.getItem("SessionId")}, function (data) {
+		findTrackOnSpotify(data, getNextTrack);
+	});
+}
+
+function makeRequest(method, args, callback) {
+	args.api_key = echonestKey;
+	args.format = "jsonp";
+	
+	console.log("ECHONEST: " + "http://developer.echonest.com/api/v4/" + method, args);
+	$.ajax({
+		dataType: "jsonp",
+		cache: false,
+		data: args,
+		url: "http://developer.echonest.com/api/v4/" + method,
+		success: function (data) {
+			console.log("ECHONEST: Received data", data);
+			if (checkResponse(data)) {
+				callback(data.response);
+			} else {
+				console.error("ECHONEST: makeRequest bailed");
+			}
+		},
+		error: function (jqxhr, textStatus, errorThrown) {
+			console.error("ECHONEST: Problem making request", jqxhr); 
+			console.error(textStatus);
+			console.error(errorThrown);
+		}		
+	});
+}
+
+function parseResponse(data) {
+	console.log("parseResponse");
+	console.log(data);
+}
+
+function getSessionInfo(callback) {
+	$.getJSON("http://developer.echonest.com/api/v4/playlist/session_info", {"api_key": echonestKey, "session_id": localStorage.getItem("SessionId")},
+		function (data) {
+		
 		}
 	);
 }
@@ -84,9 +132,19 @@ function checkResponse(data) {
 function playTrack(uri) {
 	//console.log("Pretending to play " + uri);
     sp.trackPlayer.playTrackFromUri(uri, {
-        onSuccess: function() { console.log("success");} ,
-        onFailure: function () { console.log("failure");},
-        onComplete: function () { console.log("complete"); }
+        onSuccess: function() { } ,
+        onFailure: function () { },
+        onComplete: function () { }
+    });
+}
+
+function playPlaylist(uri) {
+	sp.trackPlayer.playTrackFromContext(uri, 0, "", {
+        onSuccess: function() { 
+			sp.trackPlayer.setPlayingContextCanSkipPrev(false);
+		} ,
+        onFailure: function () { },
+        onComplete: function () { }
     });
 }
 
@@ -112,4 +170,8 @@ function getImage(data) {
 		default:
 			return data.image ? data.image : "";
 	}
+}
+
+function isFunction(obj) {
+    return Object.prototype.toString.call(obj) === "[object Function]";
 }
