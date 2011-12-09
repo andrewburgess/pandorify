@@ -60,7 +60,7 @@ function findTrackOnSpotify(data, errorCallback) {
 					playPlaylist(playlist.uri);
 				}
 			} else {
-				consol.warn("SPOTIFY: No results found");
+				console.warn("SPOTIFY: No results found");
 				if (isFunction(errorCallback)) {
 					errorCallback();
 				}
