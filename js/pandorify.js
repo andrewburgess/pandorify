@@ -18,7 +18,7 @@ function init(j) {
 function onTrackChanged(event) {
 	console.log("SPOTIFY: onTrackChanged Event", event);
 	
-	if (event.data.curtrack == true && sp.trackPlayer.getIsPlaying() == false) {
+	if (event.data.curtrack == true) {
 		console.log("PANDORIFY: Getting next track");
 		getNextTrack();
 	}
@@ -27,6 +27,10 @@ function onTrackChanged(event) {
 function createStation(artist) {
 	console.log("PANDORIFY: Create Station: " + artist);
 	localStorage.removeItem("SessionId");
+	
+	while (playlist.length > 0) {
+		playlist.remove(0);
+	}
 	
 	if (artist.length == 0)
 		return;
