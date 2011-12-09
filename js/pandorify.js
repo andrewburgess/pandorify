@@ -4,13 +4,21 @@ exports.init = init;
 exports.createStation = createStation;
 
 var echonestKey = "HRKVFLJESXBJLUDBQ";
+var currentTrack = null;
+var nextTrack = null;
 
 function init() {
 	console.log("init");
+	console.log(sp.trackPlayer);
 }
 
 function onTrackChanged(event) {
-
+	console.log(event);
+	
+	if (event.data.curtrack == true && sp.trackPlayer.getIsPlaying() == false) {
+		console.log("Getting next track");
+		getNextTrack({"session_id": localStorage.getItem("SessionId")});
+	}
 }
 
 function createStation(artist) {
@@ -19,9 +27,15 @@ function createStation(artist) {
 	if (artist.length == 0)
 		return;
 
-	var baseUrl = "http://developer.echonest.com/api/v4/playlist/dynamic"
-	
-	$.getJSON(baseUrl, {'artist': artist, 'format': 'json', 'type': 'artist-radio', 'api_key': echonestKey}, 
+	getNextTrack({'artist': artist, 'type': 'artist-radio'});
+
+	sp.trackPlayer.addEventListener("playerStateChanged", onTrackChanged);
+}
+
+function getNextTrack(args) {
+	args.api_key = echonestKey;
+	args.format = "json";
+	$.getJSON("http://developer.echonest.com/api/v4/playlist/dynamic", args, 
 		function (data) {
 			if (checkResponse(data)) {
 				console.log("Session ID: " + data.response.session_id);
@@ -30,14 +44,20 @@ function createStation(artist) {
 				
 				console.log("Received track: " + song.artist_name + " - " + song.title);
 				var query = song.artist_name + " " + song.title;
+				console.log("Searching for " + query);
 				sp.core.search(query, true, true, {
 					onSuccess: function (result) {
+						console.log(result);
 						if (result.tracks.length > 0) {
-							console.log("Possible SP track: " + result.tracks[0].uri);
+							console.log(result.tracks[0].uri);
+							
+							playTrack(result.tracks[0].uri);
+						} else {
+							console.log("No results found")
 						}
 					},
 					onFailure: function() {
-					
+						console.error("Search failed");
 					}
 				});
 			} else {
@@ -45,8 +65,6 @@ function createStation(artist) {
 			}
 		}
 	);
-
-	//sp.trackPlayer.addEventListener("playerStateChanged", onTrackChanged);
 }
 
 function checkResponse(data) {
@@ -61,6 +79,15 @@ function checkResponse(data) {
 	}
 	
 	return false;
+}
+
+function playTrack(uri) {
+	//console.log("Pretending to play " + uri);
+    sp.trackPlayer.playTrackFromUri(uri, {
+        onSuccess: function() { console.log("success");} ,
+        onFailure: function () { console.log("failure");},
+        onComplete: function () { console.log("complete"); }
+    });
 }
 
 function getImage(data) {
