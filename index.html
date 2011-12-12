@@ -9,15 +9,21 @@
 	<link rel="stylesheet" href="css/style.css" />
 	
 	<script src="js/jquery-1.7.1.min.js"></script>
+	<script type="text/javascript">
+		var sp = getSpotifyApi(1);
+	</script>
 	<script src="js/pandorify.js"></script>
 	<script type="text/javascript">
-		sp = getSpotifyApi(1);
-		var echonest = sp.require("js/echonest");
-		var pandorify = new Pandorify(echonest);		
+		
+		var echonest = sp.require("js/echonest");	
 		
 		$(document).ready(function () {
 			$("#create-station").click(function () {
-				pandorify.createStation($("#artist-radio").val());
+				createStation($("#artist-radio").val());
+			});
+			
+			$("#save-playlist").click(function () {
+				sp.core.library.createPlaylist(playlist.name);
 			});
 		});		
 		
@@ -34,7 +40,12 @@
 			</div>
 		</div>
 		<div id="currently-playing">
-			
+			<div id="artist-image-div">
+				<img id="artist-image" height="300" width="300" src="sp://import/img/placeholders/300-ablum.png" />
+			</div>
+		</div>
+		<div id="playlist-header">
+			<h2 style="float:left"></h2> <button id="save-playlist" class="add-playlist button icon"><span class="plus"></span>Add Playlist</button>
 		</div>
 		<div id="playlist" class="sp-list">
 			

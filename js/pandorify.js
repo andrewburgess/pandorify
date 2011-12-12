@@ -1,73 +1,76 @@
-function Pandorify(echonest) {
-	console.log("PANDORIFY: Created");
-	this.styles = null;
-	this.moods = null;
-	this.spotify = getSpotifyApi(1);
-	this.echonest = echonest;
-	
-	this.initialize();
-}
+var views = sp.require("sp://import/scripts/api/views");
+var models = sp.require("sp://import/scripts/api/models");
 
-Pandorify.prototype.initialize = function() {
+styles = null;
+moods = null;
+playlist = new models.Playlist();
+playlistDisplay = new views.List(playlist, function (track) {
+	return new views.Track(track, views.Track.FIELD.STAR | views.Track.FIELD.SHARE | views.Track.FIELD.NAME | views.Track.FIELD.ARTIST | views.Track.FIELD.DURATION | views.Track.FIELD.ALBUM);
+});
+	
+initialize();
+
+function initialize() {
 	console.log("PANDORIFY: initialize()");
-	var p = this;
 	if (localStorage.getItem("EchoNestStyles") == null) {
 		echonest.makeRequest("artist/list_terms", {"type": "style"}, function (data) {
-			p.styles = data.terms;
-			localStorage.setItem("EchoNestStyles", p.styles);
+			styles = data.terms;
+			localStorage.setItem("EchoNestStyles", styles);
 		});
 	} else {
-		this.styles = localStorage.getItem("EchoNestStyles");
+		styles = localStorage.getItem("EchoNestStyles");
 	}
 	
 	if (localStorage.getItem("EchoNestMoods") == null) {
 		echonest.makeRequest("artist/list_terms", {"type": "mood"}, function (data) {
-			p.moods = data.terms;
-			localStorage.setItem("EchoNestMoods", p.moods);
+			moods = data.terms;
+			localStorage.setItem("EchoNestMoods", moods);
 		});
 	} else {
-		this.moods = localStorage.getItem("EchoNestMoods");
+		moods = localStorage.getItem("EchoNestMoods");
 	}
 	
-	this.spotify.trackPlayer.addEventListener("playerStateChanged", this.onPlayerStateChanged);
+	sp.trackPlayer.addEventListener("playerStateChanged", onPlayerStateChanged);
+	
+	$("#save-playlist").attr("value", playlist.uri);
 }
 
-Pandorify.prototype.createStation = function(artist) {
+function createStation(artist) {
 	console.log("PANDORIFY: Create Station - " + artist);
-	var p = this;
 	localStorage.removeItem("SessionId");
-	
-	var playlist = this.getPlaylist();
-	while (playlist.length > 0) {
-		playlist.remove(0);
-	}
 	
 	if (artist.length == 0)
 		return;
+	
+	playlist.name = "Pandorify: " + artist;
+	
+	while (playlist.length > 0) {
+		playlist.remove(0);
+	}
 		
-	this.echonest.makeRequest("playlist/dynamic", {"artist": artist, "type": "artist-radio"}, function (data) {
-		p.findTrackOnSpotify(data);
-		setTimeout(function () {p.getNextTrack();}, 2 * 1000);
+	echonest.makeRequest("playlist/dynamic", {"artist": artist, "type": "artist-radio"}, function (data) {
+		findTrackOnSpotify(data);
+		setTimeout(function () {getNextTrack();}, 2 * 1000);
 	});
+	
+	$("#playlist-header").find("h2").html("Pandorify: " + artist);
 }
 
-Pandorify.prototype.findTrackOnSpotify = function(data, errorCallback) {
+function findTrackOnSpotify(data, errorCallback) {
 	console.info("ECHONEST: Session ID - " + data.session_id);
-	var p = this;
 	localStorage.setItem("SessionId", data.session_id);
 	
 	var song = data.songs[0];
 	var query = song.artist_name + " " + song.title;
-	var playlist = this.getPlaylist();
-	this.spotify.core.search(query, true, true, {
+	sp.core.search(query, true, true, {
 		onSuccess: function (result) {
 			console.log("SPOTIFY: Search results for " + query, result);
 			if (result.tracks.length > 0) {
 				console.log("SPOTIFY: Adding track to playlist", result.tracks[0]);
 				playlist.add(result.tracks[0].uri);
-				if (p.spotify.trackPlayer.getIsPlaying() == false) {
+				if (sp.trackPlayer.getIsPlaying() == false) {
 					console.log("SPOTIFY: Starting temporary playlist", playlist);
-					p.playPlaylist(playlist.uri);
+					playPlaylist(playlist.uri);
 				}
 			} else {
 				console.warn("SPOTIFY: No results found");
@@ -84,53 +87,45 @@ Pandorify.prototype.findTrackOnSpotify = function(data, errorCallback) {
 	});
 }
 
-Pandorify.prototype.getNextTrack = function() {
-	var p = this;
+function getNextTrack() {
 	echonest.makeRequest("playlist/dynamic", {"session_id": localStorage.getItem("SessionId")}, function (data) {
-		p.findTrackOnSpotify(data, p.getNextTrack);
+		findTrackOnSpotify(data, getNextTrack);
 	});
 }
 
-Pandorify.prototype.getPlaylist = function() {
-	console.log("PANDORIFY: getTemporaryPlaylist()");
-	return this.spotify.core.getTemporaryPlaylist("Pandorify");
-}
-
-Pandorify.prototype.onPlayerStateChanged = function (event) {
+function onPlayerStateChanged(event) {
 	console.log("SPOTIFY: playerStateChanged", event);
 	
 	if (event.data.curtrack == true) {
-		if (this.spotify.trackPlayer.getPlayingContext()[0] === this.getPlaylist().uri || !this.spotify.trackPlayer.getNowPlayingTrack()) {
-			console.log("PANDORIFY: Getting next track");
-			this.getNextTrack();
+		if (sp.trackPlayer.getPlayingContext()[0] === playlist.uri || !sp.trackPlayer.getNowPlayingTrack()) {
+			getNextTrack();
+			
+			updateUI();
 		}
 	}
-	
-	this.updateUI();
 }
 
-Pandorify.prototype.getSessionInfo = function() {
-	/*$.getJSON("http://developer.echonest.com/api/v4/playlist/session_info", {"api_key": echonestKey, "session_id": localStorage.getItem("SessionId")},
-		function (data) {
-		
-		}
-	);*/
-}
-
-Pandorify.prototype.playPlaylist = function(uri) {
-	var p = this;
-	this.spotify.trackPlayer.playTrackFromContext(uri, 0, "", {
+function playPlaylist(uri) {
+	sp.trackPlayer.playTrackFromContext(uri, 0, "", {
         onSuccess: function() { 
-			p.spotify.trackPlayer.setPlayingContextCanSkipPrev(false);
-			p.spotify.trackPlayer.setPlayingContextCanSkipNext(true);
+			sp.trackPlayer.setPlayingContextCanSkipPrev(false);
+			sp.trackPlayer.setPlayingContextCanSkipNext(true);
 		} ,
         onFailure: function () { },
         onComplete: function () { }
     });
 }
 
-Pandorify.prototype.updateUI = function() {
+function updateUI() {
 	console.log("PANDORIFY: Updating UI");
+	if (sp.trackPlayer.getPlayingContext()[0] === playlist.uri) {
+		$("#artist-image").attr("src", getImage(sp.trackPlayer.getNowPlayingTrack().track));
+	} else {
+		$("#artist-image").attr("src", "sp://import/img/placeholders/128-album.png");
+	}
+	
+	$("#playlist").empty();
+	$("#playlist").append(playlistDisplay.node);
 }
 
 function getImage(data) {
@@ -138,20 +133,20 @@ function getImage(data) {
 
 	switch	(type) {
 		case "artist":
-			return data.portrait ? data.portrait : "sp://import/img/placeholders/20-artist.png";
+			return data.portrait ? data.portrait : "sp://import/img/placeholders/128-artist.png";
 		case "album":
-			return data.cover ? data.cover : "sp://import/img/placeholders/20-album.png";
+			return data.cover ? data.cover : "sp://import/img/placeholders/300-album.png";
 		case "track":
-			return data.album.cover ? data.album.cover : "sp://import/img/placeholders/20-track.png";
+			return data.album.cover ? data.album.cover : "sp://import/img/placeholders/300-ablum.png";
 		case "playlist":
 			if (data.cover) {
 				return data.cover.replace(/spotify:mosaic:([^;]{40}?).*/, "spotify:image:$1");
 			}
 			else {
-				return "sp://import/img/placeholders/20-playlist.png";
+				return "sp://import/img/placeholders/50-playlist.png";
 			}
 		case "user":
-			return data.picture ? data.picture : "sp://import/img/placeholders/20-artist.png";
+			return data.picture ? data.picture : "sp://import/img/placeholders/128-artist.png";
 		default:
 			return data.image ? data.image : "";
 	}
