@@ -13,10 +13,66 @@
 }
 
 #radio-controller {
-	background-color: #666;
-	padding: 20px;
+	padding: 20px 0px;
 }
 
 #artist-radio-container {
-	width: 250px;
+	width: 100%;
+}
+
+#artist-image {
+	height: 128px;
+	width: 128px;
+	float: left;
+	margin: 20px 20px 20px 0px;
+}
+#artist-image .image {
+	height: 128px;
+	width: 128px;
+	float: left;
+}
+
+.search-div {
+	float:left;
+	width: 60%;
+}
+
+.input {
+	width: 100%;
+}
+
+.create-station-div {
+	margin-left: 20px;
+}
+
+.clear {
+	clear:both;
+}
+
+#artist-search-area {
+	width: 48%;
+}
+#type-search-area {
+	float:right;
+	width: 48%;
+}
+
+#track-info {
+	padding-top: 20px;
+}
+
+#track-name {
+	font-size: 32px;
+	font-weight: bold;
+	padding: 20px 0px 15px 0px;
+}
+
+#artist-name {
+	font-size: 18px;
+	padding: 5px 0px 5px 0px;
+}
+
+#album-name {
+	font-size: 18px;
+	padding: 5px 0px 5px 0px;
 }

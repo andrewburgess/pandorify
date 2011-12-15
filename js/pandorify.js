@@ -1,5 +1,6 @@
 var views = sp.require("sp://import/scripts/api/views");
 var models = sp.require("sp://import/scripts/api/models");
+var ui = sp.require("sp://import/scripts/ui");
 
 styles = null;
 moods = null;
@@ -7,11 +8,15 @@ playlist = new models.Playlist();
 playlistDisplay = new views.List(playlist, function (track) {
 	return new views.Track(track, views.Track.FIELD.STAR | views.Track.FIELD.SHARE | views.Track.FIELD.NAME | views.Track.FIELD.ARTIST | views.Track.FIELD.DURATION | views.Track.FIELD.ALBUM);
 });
-	
-initialize();
+
+var artistImage = new ui.SPImage("sp://import/img/placeholders/300-album.png");
 
 function initialize() {
 	console.log("PANDORIFY: initialize()");
+	
+	$("#playlist").append(playlistDisplay.node);
+	$("#artist-image").append(artistImage.node);
+	
 	if (localStorage.getItem("EchoNestStyles") == null) {
 		echonest.makeRequest("artist/list_terms", {"type": "style"}, function (data) {
 			styles = data.terms;
@@ -54,6 +59,7 @@ function createStation(artist) {
 	});
 	
 	$("#playlist-header").find("h2").html("Pandorify: " + artist);
+	$("#save-playlist").show();
 }
 
 function findTrackOnSpotify(data, errorCallback) {
@@ -118,14 +124,11 @@ function playPlaylist(uri) {
 
 function updateUI() {
 	console.log("PANDORIFY: Updating UI");
-	if (sp.trackPlayer.getPlayingContext()[0] === playlist.uri) {
-		$("#artist-image").attr("src", getImage(sp.trackPlayer.getNowPlayingTrack().track));
-	} else {
-		$("#artist-image").attr("src", "sp://import/img/placeholders/128-album.png");
-	}
 	
-	$("#playlist").empty();
-	$("#playlist").append(playlistDisplay.node);
+	var track = sp.trackPlayer.getNowPlayingTrack().track;
+	artistImage = new SPImage(track.album.cover, track.uri, track.name);
+	$("#artist-image").empty();
+	$("#artist-image").append(artistImage.node);
 }
 
 function getImage(data) {
