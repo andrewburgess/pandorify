@@ -161,9 +161,9 @@ function autocompleteSearch() {
 			$("#spotify-results").append(trackDiv);
 			
 			$.each(trackDiv.find(".song-result"), function(index, value) {
-				console.log($(value));
+				console.log($(value).height());
 				if ($(value).height() > 34) {
-					$(value).find(".song-search-image").css("margin-top", -7 + (el.height() - 34) / 2);
+					$(value).find(".song-search-image").css("margin-top", -7 + ($(value).height() - 34) / 2);
 				}
 			});
 		},
