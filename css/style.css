@@ -33,7 +33,8 @@
 	border-radius: 5px;
 	border: 1px solid #aaa;
 	padding: 20px;
-	height: 400px;
+	height: 600px;
+	width: 600px;
 }
 
 #start #search-area {
@@ -51,10 +52,22 @@
 
 .result-container {
 	width: 45%;
-	overflow:auto;
-	height: 300px;
+	overflow-y:auto;
+	overflow-x:hidden;
+	height: 500px;
 	border: 1px solid #ccc;
 	border-radius: 5px;
+}
+
+.result-container div strong {
+	padding-left: 20px;
+	font-size: 14px;
+}
+
+.result-container div hr {
+	margin: 5px 10px;
+	border: 1px dotted #999;
+	border-top: none;
 }
 
 .result-container h3 {
@@ -68,3 +81,32 @@
 }
 
 .result-even { background-color: #dedede; }
+
+.artist-search-image, .song-search-image {
+	height: 48px;
+	width: 48px;
+	margin: -7px 10px 0 5px;
+}
+
+.artist-search-image div, .song-search-image div {
+	height: 48px;
+	width: 48px;
+}
+
+.artist-result {
+	font-size: 14px;
+	padding: 22px 0px 22px 0px;
+	white-space: nowrap;
+}
+
+.song-result {
+	padding: 11px 0px 11px 0px;
+}
+
+.song-search-title {
+	font-size: 12px;
+}
+
+.song-search-artist {
+	font-size: 10px;
+}

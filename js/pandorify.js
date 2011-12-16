@@ -96,20 +96,83 @@ function findTrackOnSpotify(data, errorCallback) {
 }
 
 function autocompleteSearch() {
-	$("#spotify-results").empty();
-	$("#description-results").empty();
 	var search = $("#radio-search").val();
-	if (search.length == 0) return;
+	if (search.length == 0) {
+		$("#description-results").empty();
+		$("#spotify-results").empty();
+		return;
+	}
+	
 	console.log("Autocomplete " + search);
-	/*sp.core.search(query, true, true, {
+	sp.core.search(search, true, true, {
 		onSuccess: function(result) {
-		
+			var artistDiv = $(document.createElement("div"));
+			var trackDiv = $(document.createElement("div"));
+			
+			if (result.artists.length > 0) {
+				artistDiv.append($(document.createElement("strong")).html("Artist Results"));
+				artistDiv.append($(document.createElement("hr")));
+				
+				var total = Math.min(10, result.artists.length);
+				for (var i = 0; i < total; i++) {
+					var aDiv = $(document.createElement("div")).addClass("artist-result");
+					var imgDiv = $(document.createElement("div")).addClass("left").addClass("artist-search-image");
+					var img = new ui.SPImage(result.artists[i].portrait.length > 0 ? result.artists[i].portrait : "sp://import/img/placeholders/64-artist.png");
+					imgDiv.append(img.node);
+					aDiv.append(imgDiv);
+					aDiv.append(result.artists[i].name.decodeForText());
+					artistDiv.append(aDiv);
+					artistDiv.append($(document.createElement("div")).addClass("clear"));
+				}
+
+				artistDiv.find(".artist-result:even").addClass("result-even");
+			}
+			
+			if (result.tracks.length > 0) {
+				trackDiv.append($(document.createElement("strong")).html("Song Results"));
+				trackDiv.append($(document.createElement("hr")));
+				
+				var total = Math.min(10, result.tracks.length);
+				for (var i = 0; i < total; i++) {
+					var aDiv = $(document.createElement("div")).addClass("song-result");
+					var imgDiv = $(document.createElement("div")).addClass("left").addClass("song-search-image");
+					var img = new ui.SPImage(result.tracks[i].album.cover.length > 0 ? result.tracks[i].album.cover : "sp://import/img/placeholders/50-album.png");
+
+					imgDiv.append(img.node);
+					aDiv.append(imgDiv);
+					aDiv.append($(document.createElement("div")).html(result.tracks[i].name.decodeForText()).addClass("song-search-title"));
+
+					var trackArtists = result.tracks[i].artists[0].name;
+					for (var j = 1; j < result.tracks[i].artists.length; j++) {
+						trackArtists += ", " + result.tracks[i].artists[j].name;
+					}
+
+					aDiv.append($(document.createElement("div")).html(trackArtists).addClass("song-search-artist"));
+					trackDiv.append(aDiv);
+					trackDiv.append($(document.createElement("div")).addClass("clear"));
+
+				}
+				
+				trackDiv.find(".song-result:even").addClass("result-even");
+			}
+			
+			$("#spotify-results").empty();
+			$("#spotify-results").append(artistDiv.css("margin-bottom", 30));
+			$("#spotify-results").append(trackDiv);
+			
+			$.each(trackDiv.find(".song-result"), function(index, value) {
+				console.log($(value));
+				if ($(value).height() > 34) {
+					$(value).find(".song-search-image").css("margin-top", -7 + (el.height() - 34) / 2);
+				}
+			});
 		},
 		onFailure: function() {
 		
 		}
-	});*/
+	});
 	
+	$("#description-results").empty();
 	for (var x in moods) {
 		if (moods[x].startsWith(search)) {
 			$("#description-results").append("<div class='description-result'>" + moods[x] + "</div>");

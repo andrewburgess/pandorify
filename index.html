@@ -19,6 +19,7 @@
 	<script type="text/javascript">
 		
 		var echonest = sp.require("js/echonest");	
+		var state = 0;
 		
 		$(document).ready(function() {	
 			$("#background").hide();
@@ -27,11 +28,18 @@
 			
 			$("#radio-search").keyup(autocompleteSearch);
 			
+			$(window).resize(function () {
+				if (state == 1) {
+					$("#start").center();
+				}
+			});
+			
 			if (!isRadioPlaying()) {
+				state = 1;
 				$("#page").append($("#start"));
 				$("#start").center().show();
 			} else {
-			
+				state = 2;
 			}
 			
 			initialize();
@@ -56,7 +64,7 @@
 			<div id="description-results"></div>
 		</div>
 		<div class="result-container">
-			<h3>Spotify Matches</div>
+			<h3>Spotify Matches</h3>
 			<div id="spotify-results"></div>
 		</div>
 		
