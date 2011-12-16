@@ -14,21 +14,25 @@
 	<script type="text/javascript">
 		var sp = getSpotifyApi(1);
 	</script>
+	<script src="js/utility.js"></script>
 	<script src="js/pandorify.js"></script>
 	<script type="text/javascript">
 		
 		var echonest = sp.require("js/echonest");	
 		
-		$(document).ready(function () {
-			$("#save-playlist").hide();
-		
-			$("#create-station").click(function () {
-				createStation($("#artist-radio").val());
-			});
+		$(document).ready(function() {	
+			$("#background").hide();
+			$("#start").hide();
+			$("#radio-search").watermark("Search for artists, songs, or descriptions...");
 			
-			$("#save-playlist").click(function () {
-				sp.core.library.createPlaylist(playlist.name);
-			});
+			$("#radio-search").keyup(autocompleteSearch);
+			
+			if (!isRadioPlaying()) {
+				$("#page").append($("#start"));
+				$("#start").center().show();
+			} else {
+			
+			}
 			
 			initialize();
 		});		
@@ -39,58 +43,98 @@
 		<div id="header">
 			<h1>Pandorify</h1>
 		</div>
-		<div id="radio-controller">
+	</div>
+<div id="start">
+	<h2>Create a Station</h2>
+	<p>Pandorify uses the EchoNest platform to find you awesome new tunes based on the information you provide</p>
+	<div id="search-area">
+		<input id="radio-search" type="search" class="input" />
+	</div>
+	<div id="result-area">
+		<div class="right result-container">
+			<h3>Description Matches</h3>
+			<div id="description-results"></div>
+		</div>
+		<div class="result-container">
+			<h3>Spotify Matches</div>
+			<div id="spotify-results"></div>
+		</div>
+		
+	</div>
+</div>
+
+<div id="background">
+	<div id="radio-creatorasdfasdfdsfa1">
+		<div id="new-stationasdfasdf">
 			<h2><span>Set Up Radio Station</span></h2>
-			<div id="artist-radio-container">
-				<div id="search-area">
-					<div id="type-search-area">
+			<div id="step-1asdfasdf">
+				<p><strong>Step 1: Choose Radio Type</strong></p>
+				<button id="create-artist-stationasdfasdf" class="new-button">Create Artist Station</button>
+				<button id="create-genre-stationasdfasdf" class="new-button">Create Station by Description</button>
+			</div>
+			<div id="step-2-artistasdfasdfasdf">
+				<p><strong>Step 2: Add Seed Artists</strong></p>
+				<div>
+					Search: <input id="artist-searchasdfasdf" type="textbox" class="input" />
+				</div>
+			</div>
+			<div id="step-2-descriptionasdfasdfafd">
+				<p><strong>Step 2: Add Descriptions</strong></p>
+				<div>
+					<input id="description-searchasdfasdf" type="textbox" class="input" />
+				</div>
+			</div>
+			<div id="artist-radio-containerasdfasdf" style="display:none;">
+				<div id="search-areaasdfasdfa">
+					<div id="type-search-areaasdfasdfasdf">
 						<p>Based on Description</p>
 						<div class="search-div">
-							<input id="description-radio" type="textbox" class="input" />
+							<input id="description-radioasdfasdf" type="textbox" class="input" />
 						</div>
 						<div class="create-station-div">
-							<button class="new-button" id="create-genre-station">Create Station</button>
+							<button class="new-button" id="create-genre-stationasdfasdf">Create Station</button>
 						</div>
 					</div>
-					<div id="artist-search-area">
+					<div id="artist-search-areaasdfasdf">
 						<p>Based on Artist</p>
 						<div class="search-div">
-							<input id="artist-radio" type="textbox" class="input" />
+							<input id="artist-radioasdfasdfasdf" type="textbox" class="input" />
 						</div>
 						<div class="create-station-div">
-							<button class="new-button" id="create-artist-station">Create Station</button>
+							<button class="new-button" id="create-artist-stationasdfasdfasdf">Create Station</button>
 						</div>
 					</div>
 				</div>
 			</div>
-			<div class="clear"></div>
 		</div>
-		<hr />
-		<div id="currently-playing">
-			<div id="artist-image">
+		<div class="clear"></div>
+	</div>
+	<div id="currently-playingasdfasdf">
+		<div id="artist-imageaasdfasdf">
+		</div>
+		<div id="track-infoasdfasdf">
+			<div id="track-name">
+				Motivation
 			</div>
-			<div id="track-info">
-				<div id="track-name">
-					Motivation
-				</div>
-				<div id="artist-name">
-					Dope
-				</div>
-				<div id="album-name">
-					Group Therapy
-				</div>
+			<div id="artist-nameasdfasdfasdf">
+				Dope
 			</div>
-		</div>
-		<div id="playlist-header">
-			<h2 style="float:left"></h2> <button id="save-playlist" class="add-playlist button icon"><span class="plus"></span>Add Playlist</button>
-		</div>
-		<div id="playlist" class="sp-list">
-			
-		</div>
-		<div id="session-info">
-		
+			<div id="album-nameasdfasdf">
+				Group Therapy
+			</div>
 		</div>
 	</div>
-	<div id="timestamp"></div>
+	<div id="playlistasdfasdf">
+		<div id="playlist-headerasdfasdf">
+			<h2 style="float:left"></h2> <button id="save-playlistasdfasdf" class="add-playlist button icon"><span class="plus"></span>Add Playlist</button>
+		</div>
+		<div id="playlist-tableasdfasdf" class="sp-list">
+			
+		</div>
+	</div>
+	<div id="session-infoasdfasdf">
+
+	</div>
+</div>
 </body>
 </html>
