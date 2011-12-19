@@ -4,18 +4,13 @@ var ui = sp.require("sp://import/scripts/ui");
 
 styles = new Array();
 moods = new Array();
-playlist = new models.Playlist();
-playlistDisplay = new views.List(playlist, function (track) {
-	return new views.Track(track, views.Track.FIELD.STAR | views.Track.FIELD.SHARE | views.Track.FIELD.NAME | views.Track.FIELD.ARTIST | views.Track.FIELD.DURATION | views.Track.FIELD.ALBUM);
-});
 
 var artistImage = new ui.SPImage("sp://import/img/placeholders/300-album.png");
 
+var radio = new Radio();
+
 function initialize() {
 	console.log("PANDORIFY: initialize()");
-	
-	//$("#playlist").append(playlistDisplay.node);
-	//$("#artist-image").append(artistImage.node);
 	
 	if (localStorage.getItem("EchoNestStyles") == null) {
 		echonest.makeRequest("artist/list_terms", {"type": "style"}, function (data) {
@@ -37,9 +32,6 @@ function initialize() {
 		moods = JSON.parse(localStorage.getItem("EchoNestMoods"));
 	}
 	
-	sp.trackPlayer.addEventListener("playerStateChanged", onPlayerStateChanged);
-	
-	//$("#save-playlist").attr("value", playlist.uri);
 }
 
 function createStation(artist) {
@@ -95,6 +87,24 @@ function findTrackOnSpotify(data, errorCallback) {
 	});
 }
 
+function startStation(type, uri) {
+	switch (type) {
+		case "description":
+			radio.createDescriptionStation(uri);
+			break;
+		case "artist":
+			models.Artist.fromURI(uri, function(artist) {
+				radio.createArtistStation(artist);
+			});
+			break;
+		case "track":
+			models.Track.fromURI(uri, function(track) {
+				radio.createTrackStation(track);
+			});			
+			break;
+	}
+}
+
 function autocompleteSearch() {
 	var search = $("#radio-search").val();
 	if (search.length == 0) {
@@ -121,6 +131,7 @@ function autocompleteSearch() {
 					imgDiv.append(img.node);
 					aDiv.append(imgDiv);
 					aDiv.append(result.artists[i].name.decodeForText());
+					aDiv.attr("data-uri", result.artists[i].uri);
 					artistDiv.append(aDiv);
 					artistDiv.append($(document.createElement("div")).addClass("clear"));
 				}
@@ -148,6 +159,7 @@ function autocompleteSearch() {
 					}
 
 					aDiv.append($(document.createElement("div")).html(trackArtists).addClass("song-search-artist"));
+					aDiv.attr("data-uri", result.tracks[i].uri);
 					trackDiv.append(aDiv);
 					trackDiv.append($(document.createElement("div")).addClass("clear"));
 
@@ -156,15 +168,30 @@ function autocompleteSearch() {
 				trackDiv.find(".song-result:even").addClass("result-even");
 			}
 			
-			$("#spotify-results").empty();
+			$("#spotify-results").empty().show();
 			$("#spotify-results").append(artistDiv.css("margin-bottom", 30));
 			$("#spotify-results").append(trackDiv);
 			
 			$.each(trackDiv.find(".song-result"), function(index, value) {
-				console.log($(value).height());
 				if ($(value).height() > 34) {
-					$(value).find(".song-search-image").css("margin-top", -7 + ($(value).height() - 34) / 2);
+					$(value).find(".song-search-image").css("margin-top", -9 + ($(value).height() - 36) / 2);
 				}
+			});
+			
+			$.each(artistDiv.find(".artist-result"), function(index, value) {
+				if ($(value).height() > 17) {
+					$(value).find(".artist-search-image").css("margin-top", -7);
+				}
+			});
+			
+			$(".artist-result").click(function() {
+				console.log($(this));
+				startStation("artist", $(this).attr("data-uri"));
+			});
+			
+			$(".song-result").click(function() {
+				console.log($(this));
+				startStation("track", $(this).attr("data-uri"));
 			});
 		},
 		onFailure: function() {
@@ -186,6 +213,11 @@ function autocompleteSearch() {
 	}
 	
 	$("#description-results").find($(".description-result:even")).addClass("result-even");
+	
+	
+	$(".description-result").click(function() {
+		startStation("description", $(this).text());
+	});
 }
 
 function getNextTrack() {
@@ -226,34 +258,10 @@ function updateUI() {
 	//$("#artist-image").append(artistImage.node);
 }
 
-function getImage(data) {
-	var type = data.type || ((data.canonicalUsername || data.facebookUid) ? "user" : "");
-
-	switch	(type) {
-		case "artist":
-			return data.portrait ? data.portrait : "sp://import/img/placeholders/128-artist.png";
-		case "album":
-			return data.cover ? data.cover : "sp://import/img/placeholders/300-album.png";
-		case "track":
-			return data.album.cover ? data.album.cover : "sp://import/img/placeholders/300-ablum.png";
-		case "playlist":
-			if (data.cover) {
-				return data.cover.replace(/spotify:mosaic:([^;]{40}?).*/, "spotify:image:$1");
-			}
-			else {
-				return "sp://import/img/placeholders/50-playlist.png";
-			}
-		case "user":
-			return data.picture ? data.picture : "sp://import/img/placeholders/128-artist.png";
-		default:
-			return data.image ? data.image : "";
-	}
-}
-
 function isFunction(obj) {
     return Object.prototype.toString.call(obj) === "[object Function]";
 }
 
 function isRadioPlaying() {
-	return (sp.trackPlayer.getPlayingContext()[0] === playlist.uri && sp.trackPlayer.getNowPlayingTrack());
+	return (sp.trackPlayer.getPlayingContext()[0] === radio.playlist.uri && sp.trackPlayer.getNowPlayingTrack());
 }

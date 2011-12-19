@@ -35,6 +35,7 @@
 	padding: 20px;
 	height: 600px;
 	width: 600px;
+	margin: 0 auto;
 }
 
 #start #search-area {
@@ -85,7 +86,11 @@
 .artist-search-image, .song-search-image {
 	height: 48px;
 	width: 48px;
-	margin: -7px 10px 0 5px;
+	margin: -17px 10px 0 5px;
+}
+
+.song-search-image {
+	margin-top: -9px;
 }
 
 .artist-search-image div, .song-search-image div {
@@ -96,7 +101,6 @@
 .artist-result {
 	font-size: 14px;
 	padding: 22px 0px 22px 0px;
-	white-space: nowrap;
 }
 
 .song-result {
@@ -109,4 +113,8 @@
 
 .song-search-artist {
 	font-size: 10px;
+}
+
+.description-result:hover, .song-result:hover, .artist-result:hover {
+	background-color: #B8D9F5;
 }

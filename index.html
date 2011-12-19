@@ -15,6 +15,7 @@
 		var sp = getSpotifyApi(1);
 	</script>
 	<script src="js/utility.js"></script>
+	<script src="js/radio.js"></script>
 	<script src="js/pandorify.js"></script>
 	<script type="text/javascript">
 		
@@ -24,20 +25,20 @@
 		$(document).ready(function() {	
 			$("#background").hide();
 			$("#start").hide();
+			$("#radio").hide();
 			$("#radio-search").watermark("Search for artists, songs, or descriptions...");
 			
 			$("#radio-search").keyup(autocompleteSearch);
 			
 			$(window).resize(function () {
 				if (state == 1) {
-					$("#start").center();
 				}
 			});
 			
 			if (!isRadioPlaying()) {
 				state = 1;
 				$("#page").append($("#start"));
-				$("#start").center().show();
+				$("#start").show();
 			} else {
 				state = 2;
 			}
@@ -63,12 +64,15 @@
 			<h3>Description Matches</h3>
 			<div id="description-results"></div>
 		</div>
-		<div class="result-container">
+		<div id="spotify-container" class="result-container">
 			<h3>Spotify Matches</h3>
 			<div id="spotify-results"></div>
 		</div>
 		
 	</div>
+</div>
+<div id="radio">
+	<h2>Listening to Radio</h2>
 </div>
 
 <div id="background">
