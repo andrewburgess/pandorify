@@ -14,6 +14,7 @@ function Radio() {
 									   views.Track.FIELD.NAME | views.Track.FIELD.ARTIST | 
 									   views.Track.FIELD.DURATION | views.Track.FIELD.ALBUM);
 	});
+	this.playlistDisplay.node.classList.add("sp-light");
 	
 	self.createArtistStation = function(artist) {
 		if (artist == null) return;
