@@ -4,6 +4,7 @@ function Radio() {
 	
 	this.sessionId = "";
 	this.currentTrack = null;
+	this.radioPlaying = false;
 	
 	this.playlist = new models.Playlist();
 	this.playlist.name = "Pandorify";
@@ -63,6 +64,7 @@ function Radio() {
 					
 					sp.trackPlayer.addEventListener("playerStateChanged", self.trackChanged);
 					self.playPlaylist(self.tempPlaylist.uri);
+					self.radioPlaying = true;
 				}
 			});
 		});
@@ -117,12 +119,12 @@ function Radio() {
 			if (sp.trackPlayer.getPlayingContext()[0] === self.tempPlaylist.uri) {
 				self.getNextTrack({});
 				
-				/*var currentIndex = sp.trackPlayer.getPlayingContext()[1];
+				var currentIndex = sp.trackPlayer.getPlayingContext()[1];
 				if (currentIndex > 0 && self.currentTrack != null) {
 						self.playlist.add(self.currentTrack.uri);
 				}
 				
-				self.currentTrack = sp.trackPlayer.getNowPlayingTrack().track;*/
+				self.currentTrack = sp.trackPlayer.getNowPlayingTrack().track;
 			}
 		}
 	};
@@ -131,8 +133,8 @@ function Radio() {
 		console.log("PANDORIFY: Playing playlist " + uri);
 		sp.trackPlayer.playTrackFromContext(uri, 0, "", {
 			onSuccess: function() { 
-				//sp.trackPlayer.setPlayingContextCanSkipPrev(false);
-				//sp.trackPlayer.setPlayingContextCanSkipNext(true);
+				sp.trackPlayer.setPlayingContextCanSkipPrev(false);
+				sp.trackPlayer.setPlayingContextCanSkipNext(true);
 			},
 			onFailure: function () { },
 			onComplete: function () { }

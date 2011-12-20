@@ -12,6 +12,13 @@ var radio = new Radio();
 function initialize() {
 	console.log("PANDORIFY: initialize()");
 	
+	$("#radio").hide();
+	
+	$("#radio-search").watermark("Search for artists, songs, or descriptions...");
+	$("#radio-search").keyup(autocompleteSearch);
+	
+	$("#playlist").append(radio.playlistDisplay.node);
+	
 	if (localStorage.getItem("EchoNestStyles") == null) {
 		echonest.makeRequest("artist/list_terms", {"type": "style"}, function (data) {
 			for (var i = 0; i < data.terms.length; i++)
@@ -31,29 +38,6 @@ function initialize() {
 	} else {
 		moods = JSON.parse(localStorage.getItem("EchoNestMoods"));
 	}
-	
-}
-
-function createStation(artist) {
-	console.log("PANDORIFY: Create Station - " + artist);
-	localStorage.removeItem("SessionId");
-	
-	if (artist.length == 0)
-		return;
-	
-	playlist.name = "Pandorify: " + artist;
-	
-	while (playlist.length > 0) {
-		playlist.remove(0);
-	}
-		
-	echonest.makeRequest("playlist/dynamic", {"artist": artist, "type": "artist-radio"}, function (data) {
-		findTrackOnSpotify(data);
-		setTimeout(function () {getNextTrack();}, 2 * 1000);
-	});
-	
-	$("#playlist-header").find("h2").html("Pandorify: " + artist);
-	$("#save-playlist").show();
 }
 
 function startStation(type, uri) {
@@ -71,6 +55,26 @@ function startStation(type, uri) {
 				radio.createTrackStation(track);
 			});			
 			break;
+	}
+	
+	$("#start").fadeOut("fast", function() {
+		$("#radio").fadeIn("fast");
+	});
+	
+	sp.trackPlayer.addEventListener("playerStateChanged", playerStateChanged);
+}
+
+function playerStateChanged(event) {
+	if (event.data.curtrack == true && sp.trackPlayer.getPlayingContext()[0] === radio.tempPlaylist.uri) {
+		var track = sp.trackPlayer.getNowPlayingTrack().track;
+		$("#artist-image").empty();
+		console.log(track);
+		var img = new ui.SPImage(track.album.cover);
+		console.log(img);
+		$("#artist-image").append(img.node);
+		$("#track-name").html(track.name.decodeForHTML());
+		$("#album-name").html(track.album.name.decodeForHTML());
+		$("#artist-name").html(getArtistNameList(track.artists));
 	}
 }
 
@@ -121,12 +125,9 @@ function autocompleteSearch() {
 					imgDiv.append(img.node);
 					aDiv.append(imgDiv);
 					aDiv.append($(document.createElement("div")).html(result.tracks[i].name.decodeForText()).addClass("song-search-title"));
-
-					var trackArtists = result.tracks[i].artists[0].name;
-					for (var j = 1; j < result.tracks[i].artists.length; j++) {
-						trackArtists += ", " + result.tracks[i].artists[j].name;
-					}
-
+					
+					var trackArtists = getArtistNameList(result.tracks[i].artists);
+					
 					aDiv.append($(document.createElement("div")).html(trackArtists).addClass("song-search-artist"));
 					aDiv.attr("data-uri", result.tracks[i].uri);
 					trackDiv.append(aDiv);
@@ -187,44 +188,4 @@ function autocompleteSearch() {
 	$(".description-result").click(function() {
 		startStation("description", $(this).text());
 	});
-}
-
-function onPlayerStateChanged(event) {
-	console.log("SPOTIFY: playerStateChanged", event);
-	
-	if (event.data.curtrack == true) {
-		if (sp.trackPlayer.getPlayingContext()[0] === playlist.uri || !sp.trackPlayer.getNowPlayingTrack()) {
-			getNextTrack();
-			
-			updateUI();
-		}
-	}
-}
-
-function playPlaylist(uri) {
-	sp.trackPlayer.playTrackFromContext(uri, 0, "", {
-        onSuccess: function() { 
-			sp.trackPlayer.setPlayingContextCanSkipPrev(false);
-			sp.trackPlayer.setPlayingContextCanSkipNext(true);
-		} ,
-        onFailure: function () { },
-        onComplete: function () { }
-    });
-}
-
-function updateUI() {
-	console.log("PANDORIFY: Updating UI");
-	
-	var track = sp.trackPlayer.getNowPlayingTrack().track;
-	artistImage = new SPImage(track.album.cover, track.uri, track.name);
-	//$("#artist-image").empty();
-	//$("#artist-image").append(artistImage.node);
-}
-
-function isFunction(obj) {
-    return Object.prototype.toString.call(obj) === "[object Function]";
-}
-
-function isRadioPlaying() {
-	return (sp.trackPlayer.getPlayingContext()[0] === radio.playlist.uri && sp.trackPlayer.getNowPlayingTrack());
 }

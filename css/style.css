@@ -118,3 +118,36 @@
 .description-result:hover, .song-result:hover, .artist-result:hover {
 	background-color: #B8D9F5;
 }
+
+#artist-image {
+	height: 128px;
+	width: 128px;
+	float:left;
+	margin: 20px 20px 20px 0px;
+}
+
+#artist-image .image {
+	height: 128px;
+	width: 128px;
+	float:left;
+}
+
+#track-info {
+        padding-top: 20px;
+}
+
+#track-name {
+        font-size: 32px;
+        font-weight: bold;
+        padding: 20px 0px 15px 0px;
+}
+
+#artist-name {
+        font-size: 18px;
+        padding: 5px 0px 5px 0px;
+}
+
+#album-name {
+        font-size: 18px;
+        padding: 5px 0px 5px 0px;
+}
