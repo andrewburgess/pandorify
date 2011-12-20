@@ -56,37 +56,6 @@ function createStation(artist) {
 	$("#save-playlist").show();
 }
 
-function findTrackOnSpotify(data, errorCallback) {
-	console.info("ECHONEST: Session ID - " + data.session_id);
-	localStorage.setItem("SessionId", data.session_id);
-	
-	var song = data.songs[0];
-	var query = song.artist_name + " " + song.title;
-	sp.core.search(query, true, true, {
-		onSuccess: function (result) {
-			console.log("SPOTIFY: Search results for " + query, result);
-			if (result.tracks.length > 0) {
-				console.log("SPOTIFY: Adding track to playlist", result.tracks[0]);
-				playlist.add(result.tracks[0].uri);
-				if (sp.trackPlayer.getIsPlaying() == false) {
-					console.log("SPOTIFY: Starting temporary playlist", playlist);
-					playPlaylist(playlist.uri);
-				}
-			} else {
-				console.warn("SPOTIFY: No results found");
-				if (isFunction(errorCallback)) {
-					errorCallback();
-				}
-			}
-		},
-		onFailure: function () {
-			console.error("SPOTIFY: Search failed for " + query);
-			if (isFunction(errorCallback))
-				errorCallback();
-		}
-	});
-}
-
 function startStation(type, uri) {
 	switch (type) {
 		case "description":
@@ -217,12 +186,6 @@ function autocompleteSearch() {
 	
 	$(".description-result").click(function() {
 		startStation("description", $(this).text());
-	});
-}
-
-function getNextTrack() {
-	echonest.makeRequest("playlist/dynamic", {"session_id": localStorage.getItem("SessionId")}, function (data) {
-		findTrackOnSpotify(data, getNextTrack);
 	});
 }
 
