@@ -83,8 +83,7 @@ function playerStateChanged(event) {
 function autocompleteSearch() {
 	var search = $("#radio-search").val();
 	if (search.length == 0) {
-		$("#description-results").empty();
-		$("#spotify-results").empty();
+		setupSearchContainers();
 		return;
 	}
 	sp.core.search(search + "*", true, true, {
