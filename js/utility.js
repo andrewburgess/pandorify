@@ -27,3 +27,17 @@ function getArtistNameList(artists) {
 	
 	return a;
 }
+
+var Autocompleter = {
+	interval: 100,
+	lastKeypress: null,
+	interceptKeypress: function() {
+		Autocompleter.lastKeypress = new Date().getTime();
+		setTimeout(function() {
+			var currentTime = new Date().getTime();
+			if (currentTime - Autocompleter.lastKeypress > Autocompleter.interval) {
+				autocompleteSearch();
+			}
+		}, Autocompleter.interval + 100);
+	}
+};
