@@ -40,7 +40,7 @@ function Radio() {
 	self.createDescriptionStation = function(description) {
 		if (description.length == 0) return;
 		console.log("PANDORIFY: Starting station with description " + description);
-		
+		self.startRadio({"description": description, "type": "artist-description"});
 	};
 	
 	self.clearPlaylist = function() {
