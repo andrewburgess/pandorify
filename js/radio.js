@@ -29,14 +29,18 @@ function Radio() {
 		if (track == null) return;
 		console.log("PANDORIFY: Starting station with song " + track.data.artists[0].name.decodeForText() + " - " + track.data.name.decodeForText(), track);
 		
-		self.clearPlaylist();
+		echonest.makeRequest("song/search", {"title": track.data.name.decodeForText(), "artist": track.data.artists[0].name.decodeForText(), "results": 1}, function(data) {
+			if (data.songs.length > 0) {
+				var id = data.songs[0].id;
+				self.startRadio({"song_id": id, "type": "song-radio"});
+			}
+		});
 	};
 	
 	self.createDescriptionStation = function(description) {
 		if (description.length == 0) return;
 		console.log("PANDORIFY: Starting station with description " + description);
 		
-		self.clearPlaylist();
 	};
 	
 	self.clearPlaylist = function() {

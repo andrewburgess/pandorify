@@ -69,15 +69,14 @@ function startStation(type, uri) {
 function playerStateChanged(event) {
 	if (event.data.curtrack == true && sp.trackPlayer.getPlayingContext()[0] === radio.tempPlaylist.uri) {
 		var track = sp.trackPlayer.getNowPlayingTrack().track;
-		$("#artist-image").empty();
+		$("#artist-image").empty().append($(document.createElement("a")).attr("href", track.uri));
 		var img = new ui.SPImage(track.album.cover);
+		$(radio.playerImage.image).empty();
 		$(radio.playerImage.image).append(img.node);
-		$("#artist-image").append(radio.playerImage.node);
-		$("#track-name").html(track.name.decodeForText());
-		$("#album-name").empty();
-		$("#album-name").append($(document.createElement("a")).attr("href", track.album.uri).text(track.album.name.decodeForText()));
-		$("#artist-name").empty();
-		getArtistNameLinkList($("#artist-name"), track.artists);
+		$("#artist-image").children().append(radio.playerImage.node);
+		$("#track-name").empty().append($(document.createElement("a")).attr("href", track.uri).text(track.name.decodeForText()));
+		$("#album-name").empty().append($(document.createElement("a")).attr("href", track.album.uri).text(track.album.name.decodeForText()));
+		getArtistNameLinkList($("#artist-name").empty(), track.artists);
 	}
 }
 
