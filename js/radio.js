@@ -15,6 +15,8 @@ function Radio() {
 									   views.Track.FIELD.DURATION | views.Track.FIELD.ALBUM);
 	});
 	this.playlistDisplay.node.classList.add("sp-light");
+	this.playerImage = new views.Player();
+	this.playerImage.context = this.tempPlaylist;
 	
 	self.createArtistStation = function(artist) {
 		if (artist == null) return;
@@ -71,7 +73,7 @@ function Radio() {
 		});
 	};
 	
-	self.getNextTrack = function(params) {
+	self.getNextTrack = function(params, onSuccess) {
 		console.log("PANDORIFY: getNextTrack", params);
 		params.session_id = self.sessionId;
 		echonest.makeRequest("playlist/dynamic", params, function(data) {
@@ -80,7 +82,8 @@ function Radio() {
 				"track": data.songs[0].title,
 				"onError": function() {
 					self.getNextTrack(params);
-				}
+				},
+				"onSuccess": onSuccess
 			});
 		});
 	};
@@ -114,10 +117,10 @@ function Radio() {
 	
 	self.trackChanged = function(event) {
 		console.log("SPOTIFY: playerStateChanged", event);
-		console.log(sp.trackPlayer.getPlayingContext());
 		
 		if (event.data.curtrack == true) {
 			if (sp.trackPlayer.getPlayingContext()[0] === self.tempPlaylist.uri) {
+				self.playerImage.playing = sp.trackPlayer.getIsPlaying();
 				self.getNextTrack({});
 				
 				var currentIndex = sp.trackPlayer.getPlayingContext()[1];
@@ -127,15 +130,19 @@ function Radio() {
 				
 				self.currentTrack = sp.trackPlayer.getNowPlayingTrack().track;
 			}
+			else if (sp.trackPlayer.getIsPlaying() == false) {
+				self.getNextTrack({}, self.playPlaylist);
+			}
 		}
 	};
 	
-	self.playPlaylist = function(uri) {
-		console.log("PANDORIFY: Playing playlist " + uri);
-		sp.trackPlayer.playTrackFromContext(uri, 0, "", {
+	self.playPlaylist = function() {
+		console.log("PANDORIFY: Playing playlist " + self.tempPlaylist.uri);
+		var index = self.radioPlaying ? self.tempPlaylist.length - 1 : 0;
+		sp.trackPlayer.playTrackFromContext(self.tempPlaylist.uri, index, "", {
 			onSuccess: function() { 
-				sp.trackPlayer.setPlayingContextCanSkipPrev(false);
-				sp.trackPlayer.setPlayingContextCanSkipNext(true);
+				sp.trackPlayer.setPlayingContextCanSkipPrev(self.tempPlaylist.uri, false);
+				sp.trackPlayer.setPlayingContextCanSkipNext(self.tempPlaylist.uritrue);
 			},
 			onFailure: function () { },
 			onComplete: function () { }

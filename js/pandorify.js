@@ -70,13 +70,14 @@ function playerStateChanged(event) {
 	if (event.data.curtrack == true && sp.trackPlayer.getPlayingContext()[0] === radio.tempPlaylist.uri) {
 		var track = sp.trackPlayer.getNowPlayingTrack().track;
 		$("#artist-image").empty();
-		console.log(track);
 		var img = new ui.SPImage(track.album.cover);
-		console.log(img);
-		$("#artist-image").append(img.node);
-		$("#track-name").html(track.name.decodeForHTML());
-		$("#album-name").html(track.album.name.decodeForHTML());
-		$("#artist-name").html(getArtistNameList(track.artists));
+		$(radio.playerImage.image).append(img.node);
+		$("#artist-image").append(radio.playerImage.node);
+		$("#track-name").html(track.name.decodeForText());
+		$("#album-name").empty();
+		$("#album-name").append($(document.createElement("a")).attr("href", track.album.uri).text(track.album.name.decodeForText()));
+		$("#artist-name").empty();
+		getArtistNameLinkList($("#artist-name"), track.artists);
 	}
 }
 

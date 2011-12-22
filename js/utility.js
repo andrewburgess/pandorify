@@ -22,10 +22,18 @@ function isRadioPlaying() {
 function getArtistNameList(artists) {
 	var a = artists[0].name.decodeForHTML();
 	for (var j = 1; j < artists.length; j++) {
-		a += ", " + artists[j].name.decodeForHTML();
+		a += ", " + artists[j].name.decodeForText();
 	}
 	
 	return a;
+}
+
+function getArtistNameLinkList(div, artists) {
+	div.append($(document.createElement("a")).attr("href", artists[0].uri).text(artists[0].name.decodeForText()));
+	for (var i = 1; i < artists.length; i++) {
+		div.append(", ");
+		div.append($(document.createElement("a")).attr("href", artists[i].uri).text(artists[i].name.decodeForText()));
+	}
 }
 
 var Autocompleter = {
