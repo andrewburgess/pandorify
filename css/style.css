@@ -16,18 +16,6 @@
 	font-size: 20px;
 }
 
-#artist-image {
-	height: 128px;
-	width: 128px;
-	float: left;
-	margin: 20px 20px 20px 0px;
-}
-#artist-image .image {
-	height: 128px;
-	width: 128px;
-	float: left;
-}
-
 #start {
 	text-align: center;
 	border-radius: 5px;
@@ -123,7 +111,7 @@
 	height: 128px;
 	width: 128px;
 	float:left;
-	margin: 20px 20px 20px 0px;
+	margin-right: 20px;
 }
 
 #artist-image .image {
@@ -133,7 +121,7 @@
 }
 
 #track-info {
-        padding-top: 20px;
+	
 }
 
 #track-name {
@@ -154,4 +142,12 @@
 #album-name {
         font-size: 18px;
         padding: 5px 0px 5px 0px;
+}
+
+#current-playing {
+	-webkit-box-shadow: 5px 5px 10px #ccc;
+	border: 1px solid #aaa;
+	border-radius: 10px;
+	padding: 10px 0 10px 40px;
+	margin-bottom: 30px;
 }

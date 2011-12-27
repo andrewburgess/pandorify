@@ -46,10 +46,13 @@ function startStation(type, uri) {
 	switch (type) {
 		case "description":
 			radio.createDescriptionStation(uri);
+			$("#radio").find("h2").find("span").html("based on " + uri);
 			break;
 		case "artist":
 			models.Artist.fromURI(uri, function(artist) {
 				radio.createArtistStation(artist);
+				
+				$("#radio").find("h2").find("span").append("based on ").append($(document.createElement("a")).attr("href", uri).text(artist.name));
 			});
 			break;
 		case "track":
