@@ -118,22 +118,27 @@ function autocompleteSearch() {
 }
 
 function processSearchResults(result) {
+	$("#spotify-results").empty().show();
+	processArtists(result.artists);
+	processTracks(result.tracks);	
+}
+
+function processArtists(artists) {
 	var artistDiv = $(document.createElement("div"));
-	var trackDiv = $(document.createElement("div"));
 	
-	if (result.artists.length > 0) {
+	if (artists.length > 0) {
 		artistDiv.append($(document.createElement("strong")).html("Artist Results"));
 		artistDiv.append($(document.createElement("hr")));
 		
-		var total = Math.min(10, result.artists.length);
+		var total = Math.min(10, artists.length);
 		for (var i = 0; i < total; i++) {
 			var aDiv = $(document.createElement("div")).addClass("artist-result");
 			var imgDiv = $(document.createElement("div")).addClass("left").addClass("artist-search-image");
-			var img = new ui.SPImage(result.artists[i].portrait.length > 0 ? result.artists[i].portrait : "sp://import/img/placeholders/64-artist.png");
+			var img = new ui.SPImage(artists[i].portrait.length > 0 ? artists[i].portrait : "sp://import/img/placeholders/64-artist.png");
 			imgDiv.append(img.node);
 			aDiv.append(imgDiv);
-			aDiv.append(result.artists[i].name.decodeForText());
-			aDiv.attr("data-uri", result.artists[i].uri);
+			aDiv.append(artists[i].name.decodeForText());
+			aDiv.attr("data-uri", artists[i].uri);
 			artistDiv.append(aDiv);
 			artistDiv.append($(document.createElement("div")).addClass("clear"));
 		}
@@ -141,41 +146,7 @@ function processSearchResults(result) {
 		artistDiv.find(".artist-result:even").addClass("result-even");
 	}
 	
-	if (result.tracks.length > 0) {
-		trackDiv.append($(document.createElement("strong")).html("Song Results"));
-		trackDiv.append($(document.createElement("hr")));
-		
-		var total = Math.min(10, result.tracks.length);
-		for (var i = 0; i < total; i++) {
-			var aDiv = $(document.createElement("div")).addClass("song-result");
-			var imgDiv = $(document.createElement("div")).addClass("left").addClass("song-search-image");
-			var img = new ui.SPImage(result.tracks[i].album.cover.length > 0 ? result.tracks[i].album.cover : "sp://import/img/placeholders/50-album.png");
-
-			imgDiv.append(img.node);
-			aDiv.append(imgDiv);
-			aDiv.append($(document.createElement("div")).html(result.tracks[i].name.decodeForText()).addClass("song-search-title"));
-			
-			var trackArtists = getArtistNameList(result.tracks[i].artists);
-			
-			aDiv.append($(document.createElement("div")).html(trackArtists).addClass("song-search-artist"));
-			aDiv.attr("data-uri", result.tracks[i].uri);
-			trackDiv.append(aDiv);
-			trackDiv.append($(document.createElement("div")).addClass("clear"));
-
-		}
-		
-		trackDiv.find(".song-result:even").addClass("result-even");
-	}
-	
-	$("#spotify-results").empty().show();
 	$("#spotify-results").append(artistDiv.css("margin-bottom", 30));
-	$("#spotify-results").append(trackDiv);
-	
-	$.each(trackDiv.find(".song-result"), function(index, value) {
-		if ($(value).height() > 34) {
-			$(value).find(".song-search-image").css("margin-top", -9 + ($(value).height() - 36) / 2);
-		}
-	});
 	
 	$.each(artistDiv.find(".artist-result"), function(index, value) {
 		if ($(value).height() > 17) {
@@ -187,6 +158,44 @@ function processSearchResults(result) {
 		console.log($(this));
 		startStation("artist", $(this).attr("data-uri"));
 	});
+}
+
+function processTracks(tracks) {
+	var trackDiv = $(document.createElement("div"));
+	
+	if (tracks.length > 0) {
+		trackDiv.append($(document.createElement("strong")).html("Song Results"));
+		trackDiv.append($(document.createElement("hr")));
+		
+		var total = Math.min(10, tracks.length);
+		for (var i = 0; i < total; i++) {
+			var aDiv = $(document.createElement("div")).addClass("song-result");
+			var imgDiv = $(document.createElement("div")).addClass("left").addClass("song-search-image");
+			var img = new ui.SPImage(tracks[i].album.cover.length > 0 ? tracks[i].album.cover : "sp://import/img/placeholders/50-album.png");
+
+			imgDiv.append(img.node);
+			aDiv.append(imgDiv);
+			aDiv.append($(document.createElement("div")).html(tracks[i].name.decodeForText()).addClass("song-search-title"));
+			
+			var trackArtists = getArtistNameList(tracks[i].artists);
+			
+			aDiv.append($(document.createElement("div")).html(trackArtists).addClass("song-search-artist"));
+			aDiv.attr("data-uri", tracks[i].uri);
+			trackDiv.append(aDiv);
+			trackDiv.append($(document.createElement("div")).addClass("clear"));
+
+		}
+		
+		trackDiv.find(".song-result:even").addClass("result-even");
+	}
+	
+	$("#spotify-results").append(trackDiv);
+	
+	$.each(trackDiv.find(".song-result"), function(index, value) {
+		if ($(value).height() > 34) {
+			$(value).find(".song-search-image").css("margin-top", -9 + ($(value).height() - 36) / 2);
+		}
+	});
 	
 	$(".song-result").click(function() {
 		console.log($(this));
@@ -195,24 +204,25 @@ function processSearchResults(result) {
 }
 
 function setupSearchContainers() {
-	var a = sp.core.library.getArtists();
-	var t = sp.core.library.getTracks();
+	var username = sp.core.user == null ? "deceptacle" : sp.core.user.username;
+	$("#spotify-results").empty().show();
 	
-	var artists = new Array();
-	var tracks = new Array();
-	
-	for (var i = 0; i < Math.min(a.length, 10); i++) {
-		var index = Math.floor(Math.random() * a.length);
-		artists.push(a[index]);
-	}
-	
-	for (var i = 0; i < Math.min(t.length, 10); i++) {
-		var index = Math.floor(Math.random() * t.length);
-		tracks.push(t[index]);
-	}
-	
-	processSearchResults({"artists": artists, "tracks": tracks});
-	
+	sp.social.getToplist("artist", "user", username,
+		{
+			onSuccess: function(results) {
+				console.log("SPOTIFY: Found top artists for user " + username, results);
+				processArtists(results.artists);
+			},
+			onComplete: function(_) {
+				sp.social.getToplist("track", "user", username,
+					{
+						onSuccess: function(results) {
+							console.log("SPOTIFY: Found top tracks for user " + username, results);
+							processTracks(results.tracks);
+						}
+					});
+			}
+		});	
 
 	$("#description-results").empty();
 	for (var x in styles) {
