@@ -1,0 +1,25 @@
+<script type="text/javascript">
+
+	$(document).ready(function() {
+		console.log("PANDORIFY: radio loaded");
+		
+		$("#playlist").append(radio.playlistDisplay.node);
+	});
+
+</script>
+
+<div id="radio">
+	<h2>Listening to Radio <span></span></h2>
+	<div id="current-playing">
+		<div id="artist-image"></div>
+		<div id="track-info">
+			<div id="track-name"></div>
+			<div id="artist-name"></div>
+			<div id="album-name"></div>
+		</div>
+		<div class="clear"></div>
+	</div>
+	<div id="playlist">
+	
+	</div>
+</div>

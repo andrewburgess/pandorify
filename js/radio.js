@@ -142,6 +142,7 @@ function Radio() {
 	
 	self.playPlaylist = function() {
 		console.log("PANDORIFY: Playing playlist " + self.tempPlaylist.uri);
+		
 		var index = self.radioPlaying ? self.tempPlaylist.length - 1 : 0;
 		sp.trackPlayer.playTrackFromContext(self.tempPlaylist.uri, index, "", {
 			onSuccess: function() { 

@@ -22,6 +22,7 @@
 		
 		$(document).ready(function() {	
 			initialize();
+			$("#page").load("create-station.html");
 		});		
 	</script>
 </head>
@@ -31,39 +32,7 @@
 			<h1>Pandorify</h1>
 		</div>
 		<div id="page">
-			<div id="start">
-				<h2>Create a Station</h2>
-				<p>Pandorify uses the EchoNest platform to find you awesome new tunes based on the information you provide</p>
-				<div id="search-area">
-					<input id="radio-search" type="search" class="input" />
-				</div>
-				<div id="result-area">
-					<div class="right result-container">
-						<h3>Description Matches</h3>
-						<div id="description-results"></div>
-					</div>
-					<div id="spotify-container" class="result-container">
-						<h3>Spotify Matches</h3>
-						<div id="spotify-results"></div>
-					</div>
-					
-				</div>
-			</div>
-			<div id="radio">
-				<h2>Listening to Radio <span></span></h2>
-				<div id="current-playing">
-					<div id="artist-image"></div>
-					<div id="track-info">
-						<div id="track-name"></div>
-						<div id="artist-name"></div>
-						<div id="album-name"></div>
-					</div>
-					<div class="clear"></div>
-				</div>
-				<div id="playlist">
-				
-				</div>
-			</div>
+			
 		</div>
 	</div>
 </body>

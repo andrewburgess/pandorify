@@ -12,13 +12,6 @@ var radio = new Radio();
 function initialize() {
 	console.log("PANDORIFY: initialize()");
 	
-	$("#radio").hide();
-	
-	$("#radio-search").watermark("Search for artists, songs, or descriptions...");
-	$("#radio-search").keyup(Autocompleter.interceptKeypress);
-	
-	$("#playlist").append(radio.playlistDisplay.node);
-	
 	if (localStorage.getItem("EchoNestStyles") == null) {
 		echonest.makeRequest("artist/list_terms", {"type": "style"}, function (data) {
 			for (var i = 0; i < data.terms.length; i++)
@@ -28,6 +21,7 @@ function initialize() {
 	} else {
 		styles = JSON.parse(localStorage.getItem("EchoNestStyles"));
 	}
+	
 	
 	if (localStorage.getItem("EchoNestMoods") == null) {
 		echonest.makeRequest("artist/list_terms", {"type": "mood"}, function (data) {
@@ -39,25 +33,37 @@ function initialize() {
 		moods = JSON.parse(localStorage.getItem("EchoNestMoods"));
 	}
 	
-	setupSearchContainers();
+	
 }
 
 function startStation(type, uri) {
 	switch (type) {
 		case "description":
-			radio.createDescriptionStation(uri);
-			$("#radio").find("h2").find("span").html("based on " + uri);
+			$("#page").load("radio.html", function() {
+				radio.createDescriptionStation(uri);
+				$("#radio").find("h2").find("span").html("based on " + uri);
+			});
 			break;
 		case "artist":
-			models.Artist.fromURI(uri, function(artist) {
-				radio.createArtistStation(artist);
-				
-				$("#radio").find("h2").find("span").append("based on ").append($(document.createElement("a")).attr("href", uri).text(artist.name));
+			$("#page").load("radio.html", function() {
+				models.Artist.fromURI(uri, function(artist) {
+					radio.createArtistStation(artist);
+					
+					$("#radio").find("h2").find("span").append("based on ").append($(document.createElement("a")).attr("href", uri).text(artist.name.decodeForText()));
+				});
 			});
 			break;
 		case "track":
-			models.Track.fromURI(uri, function(track) {
-				radio.createTrackStation(track);
+			$("#page").load("radio.html", function() {
+				models.Track.fromURI(uri, function(track) {
+					radio.createTrackStation(track);
+					
+					$("#radio").find("h2").find("span").append("based on ").append($(document.createElement("a")).attr("href", track.album.uri).text(track.name.decodeForText())).append(" by ");
+					$("#radio").find("h2").find("span").append($(document.createElement("a")).attr("href", track.artists[0].uri).text(track.artists[0].name.decodeForText()));
+					for (var i = 1; i < track.artists.length; i++) {
+						$("#radio").find("h2").find("span").append(", ").append($(document.createElement("a")).attr("href", track.artists[i].uri).text(track.artists[i].name.decodeForText()));
+					}
+				});	
 			});			
 			break;
 	}
@@ -77,7 +83,7 @@ function playerStateChanged(event) {
 		$(radio.playerImage.image).empty();
 		$(radio.playerImage.image).append(img.node);
 		$("#artist-image").children().append(radio.playerImage.node);
-		$("#track-name").empty().append($(document.createElement("a")).attr("href", track.uri).text(track.name.decodeForText()));
+		$("#track-name").empty().append($(document.createElement("a")).attr("href", track.album.uri).text(track.name.decodeForText()));
 		$("#album-name").empty().append($(document.createElement("a")).attr("href", track.album.uri).text(track.album.name.decodeForText()));
 		getArtistNameLinkList($("#artist-name").empty(), track.artists);
 	}
