@@ -12,7 +12,21 @@ var radio = new Radio();
 radio.sessionInfoReceived = processSessionInfo;
 
 function processSessionInfo(data) {
-
+	$("#session-terms").empty();
+	for (var i = 0; i < data.terms.length; i++) {
+		var next = $(document.createElement("div")).addClass("session-term");
+		var width = Math.round(data.terms[i].frequency * 300);
+		var amountDiv = $(document.createElement("div")).addClass("session-amount");
+		amountDiv.css("width", width);
+		if (width >= 290) {
+			amountDiv.css("border-top-right-radius", (10 - (300 - width)) + "px 10px");
+			amountDiv.css("border-bottom-right-radius", (10 - (300 - width)) + "px 10px");
+		}
+		next.append(amountDiv);
+		next.append($(document.createElement("div")).addClass("session-description").text(data.terms[i].name));
+		
+		$("#session-terms").append(next);
+	}
 }
 
 function initialize() {
