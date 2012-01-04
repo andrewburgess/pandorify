@@ -2,6 +2,30 @@
 
 	$(document).ready(function() {
 		console.log("PANDORIFY: radio loaded");
+		
+		$("#session-info").dialog(
+			{
+				autoOpen: false,
+				maxWidth: Math.round($(document).width() * 0.9),
+				maxHeight: Math.round($(document).height() * 0.9)
+			}
+		);
+		
+		$("#session-info-button").click(function() {
+			$("#session-info").dialog("open");
+		});
+		
+		if (sp.trackPlayer.getPlayingContext()[0] === radio.tempPlaylist.uri) {
+			var track = sp.trackPlayer.getNowPlayingTrack().track;
+			$("#artist-image").empty().append($(document.createElement("a")).attr("href", track.uri));
+			var img = new ui.SPImage(track.album.cover);
+			$(radio.playerImage.image).empty();
+			$(radio.playerImage.image).append(img.node);
+			$("#artist-image").children().append(radio.playerImage.node);
+			$("#track-name").empty().append($(document.createElement("a")).attr("href", track.album.uri).text(track.name.decodeForText()));
+			$("#album-name").empty().append($(document.createElement("a")).attr("href", track.album.uri).text(track.album.name.decodeForText()));
+			getArtistNameLinkList($("#artist-name").empty(), track.artists);
+		}
 	});
 
 </script>
@@ -18,14 +42,7 @@
 		<div class="clear"></div>
 	</div>
 	
-	<div id="session-info">
-		<div id="session-info-header">
-			<h3>Session Status</h3>
-		</div>
-		<div id="session-info-content">
-			<div id="session-terms">
-				
-			</div>
-		</div>
+	<div id="session-info-button">
+		Show Session Info
 	</div>
 </div>

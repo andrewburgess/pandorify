@@ -27,6 +27,18 @@ function processSessionInfo(data) {
 		
 		$("#session-terms").append(next);
 	}
+	
+	var maxHeight = Math.round($(document).height() * 0.9);
+	var maxWidth = Math.round($(document).width() * 0.9);
+	
+	$("#session-info").
+						css("max-height", maxHeight).
+						css("max-width", maxWidth).
+						css("overflow-y", "scroll").
+						height(maxHeight).
+						width(maxWidth);
+						
+	$("#session-info").dialog({autoOpen: false, maxWidth: maxWidth, maxHeight: maxHeight, height: maxHeight, width: maxWidth});
 }
 
 function initialize() {

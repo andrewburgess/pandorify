@@ -23,6 +23,9 @@
 		$(document).ready(function() {	
 			initialize();
 			$("#page").load("create-station.html");
+			$("#header").click(function () {
+				$("#page").load("create-station.html");
+			});
 		});		
 	</script>
 </head>
@@ -33,6 +36,14 @@
 		</div>
 		<div id="page">
 			
+		</div>
+	</div>
+	
+	<div id="session-info" title="Session Info">
+		<div id="session-info-content">
+			<div id="session-terms">
+				
+			</div>
 		</div>
 	</div>
 </body>

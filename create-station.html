@@ -7,6 +7,14 @@
 		$("#radio-search").keyup(Autocompleter.interceptKeypress);
 		
 		setupSearchContainers();
+		
+		if (!(sp.trackPlayer.getPlayingContext()[0] === radio.tempPlaylist.uri)) {
+			$("#goto-radio").hide();
+		}
+		
+		$("#goto-radio").click(function() {
+			$("#page").load("radio.html");
+		});
 	});
 
 </script>
@@ -26,6 +34,9 @@
 			<h3>Spotify Matches</h3>
 			<div id="spotify-results"></div>
 		</div>
-		
 	</div>
+</div>
+<div class="clear"></div>
+<div style="margin-top:20px;text-align:center;">
+	<button id="goto-radio" class="icon button"><span class="share"></span>Go to Radio Station</button>
 </div>
