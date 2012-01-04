@@ -3,20 +3,13 @@ function Radio() {
 	var self = this;
 	
 	this.sessionId = "";
-	this.currentTrack = null;
 	this.radioPlaying = false;
 	
-	this.playlist = new models.Playlist();
-	this.playlist.name = "Pandorify";
 	this.tempPlaylist = sp.core.getTemporaryPlaylist("Pandorify Temp " + (new Date()).toISOString());
-	this.playlistDisplay = new views.List(this.playlist, function (track) {
-		return new views.Track(track, views.Track.FIELD.STAR | views.Track.FIELD.SHARE | 
-									   views.Track.FIELD.NAME | views.Track.FIELD.ARTIST | 
-									   views.Track.FIELD.DURATION | views.Track.FIELD.ALBUM);
-	});
-	this.playlistDisplay.node.classList.add("sp-light");
 	this.playerImage = new views.Player();
 	this.playerImage.context = this.tempPlaylist;
+	
+	this.sessionInfoReceived = null;
 	
 	self.createArtistStation = function(artist) {
 		if (artist == null) return;
@@ -44,10 +37,6 @@ function Radio() {
 	};
 	
 	self.clearPlaylist = function() {
-		while (self.playlist.length > 0) {
-			self.playlist.remove(0);
-		}
-		
 		while (self.tempPlaylist.length > 0) {
 			self.tempPlaylist.remove(0);
 		}
@@ -104,6 +93,12 @@ function Radio() {
 					if (isFunction(params.onSuccess)) {
 						params.onSuccess();
 					}
+					
+					if (isFunction(self.sessionInfoReceived)) {
+						echonest.makeRequest("playlist/session_info", {"session_id": self.sessionId}, function(data) {
+							self.sessionInfoReceived(data);
+						});
+					}
 				} else {
 					console.warn("SPOTIFY: No results found");
 					if (isFunction(params.onError)) {
@@ -121,18 +116,12 @@ function Radio() {
 	
 	self.trackChanged = function(event) {
 		console.log("SPOTIFY: playerStateChanged", event);
+		console.log(sp.trackPlayer.getNowPlayingTrack().position + ", " + sp.trackPlayer.getNowPlayingTrack().length);
 		
 		if (event.data.curtrack == true) {
 			if (sp.trackPlayer.getPlayingContext()[0] === self.tempPlaylist.uri) {
 				self.playerImage.playing = sp.trackPlayer.getIsPlaying();
 				self.getNextTrack({});
-				
-				var currentIndex = sp.trackPlayer.getPlayingContext()[1];
-				if (currentIndex > 0 && self.currentTrack != null) {
-						self.playlist.add(self.currentTrack.uri);
-				}
-				
-				self.currentTrack = sp.trackPlayer.getNowPlayingTrack().track;
 			}
 			else if (sp.trackPlayer.getIsPlaying() == false) {
 				self.getNextTrack({}, self.playPlaylist);

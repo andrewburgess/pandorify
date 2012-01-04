@@ -9,6 +9,12 @@ var artistImage = new ui.SPImage("sp://import/img/placeholders/300-album.png");
 
 var radio = new Radio();
 
+radio.sessionInfoReceived = processSessionInfo;
+
+function processSessionInfo(data) {
+
+}
+
 function initialize() {
 	console.log("PANDORIFY: initialize()");
 	
