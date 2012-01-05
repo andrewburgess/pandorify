@@ -11,19 +11,28 @@ var radio = new Radio();
 
 radio.sessionInfoReceived = processSessionInfo;
 
+function setCurrentlyPlayingTrack() {
+	if (sp.trackPlayer.getPlayingContext()[0] === radio.tempPlaylist.uri) {
+		var track = sp.trackPlayer.getNowPlayingTrack().track;
+		$("#artist-image").empty().append($(document.createElement("a")).attr("href", track.uri));
+		var img = new ui.SPImage(track.album.cover);
+		$(radio.playerImage.image).empty();
+		$(radio.playerImage.image).append(img.node);
+		$("#artist-image").children().append(radio.playerImage.node);
+		$("#track-name").empty().append($(document.createElement("a")).attr("href", track.album.uri).text(track.name.decodeForText()));
+		getArtistNameLinkList($("#artist-name").empty(), track.artists);
+	}
+}
+
 function processSessionInfo(data) {
 	$("#session-terms").empty();
 	for (var i = 0; i < data.terms.length; i++) {
 		var next = $(document.createElement("div")).addClass("session-term");
-		var width = Math.round(data.terms[i].frequency * 300);
+		var width = Math.round(data.terms[i].frequency * 100);
 		var amountDiv = $(document.createElement("div")).addClass("session-amount");
-		amountDiv.css("width", width);
-		if (width >= 290) {
-			amountDiv.css("border-top-right-radius", (10 - (300 - width)) + "px 10px");
-			amountDiv.css("border-bottom-right-radius", (10 - (300 - width)) + "px 10px");
-		}
-		next.append(amountDiv);
+		amountDiv.css("width", width + "%");
 		next.append($(document.createElement("div")).addClass("session-description").text(data.terms[i].name));
+		next.append(amountDiv);
 		
 		$("#session-terms").append(next);
 	}

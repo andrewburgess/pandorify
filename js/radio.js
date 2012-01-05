@@ -11,6 +11,8 @@ function Radio() {
 	
 	this.sessionInfoReceived = null;
 	
+	this.nextOptions = {}
+	
 	self.createArtistStation = function(artist) {
 		if (artist == null) return;
 		console.log("PANDORIFY: Starting station with artist " + artist.data.name.decodeForText(), artist);

@@ -14,35 +14,22 @@
 		$("#session-info-button").click(function() {
 			$("#session-info").dialog("open");
 		});
-		
-		if (sp.trackPlayer.getPlayingContext()[0] === radio.tempPlaylist.uri) {
-			var track = sp.trackPlayer.getNowPlayingTrack().track;
-			$("#artist-image").empty().append($(document.createElement("a")).attr("href", track.uri));
-			var img = new ui.SPImage(track.album.cover);
-			$(radio.playerImage.image).empty();
-			$(radio.playerImage.image).append(img.node);
-			$("#artist-image").children().append(radio.playerImage.node);
-			$("#track-name").empty().append($(document.createElement("a")).attr("href", track.album.uri).text(track.name.decodeForText()));
-			$("#album-name").empty().append($(document.createElement("a")).attr("href", track.album.uri).text(track.album.name.decodeForText()));
-			getArtistNameLinkList($("#artist-name").empty(), track.artists);
-		}
 	});
 
 </script>
 
 <div id="radio">
+	<div id="session-info-button">
+		Show Session Info
+	</div>
 	<h2>Listening to Radio <span></span></h2>
+	<div class="clear"></div>
 	<div id="current-playing">
 		<div id="artist-image"></div>
 		<div id="track-info">
 			<div id="track-name"></div>
 			<div id="artist-name"></div>
-			<div id="album-name"></div>
 		</div>
 		<div class="clear"></div>
-	</div>
-	
-	<div id="session-info-button">
-		Show Session Info
 	</div>
 </div>
