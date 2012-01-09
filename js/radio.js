@@ -96,11 +96,7 @@ function Radio() {
 						params.onSuccess();
 					}
 					
-					if (isFunction(self.sessionInfoReceived)) {
-						echonest.makeRequest("playlist/session_info", {"session_id": self.sessionId}, function(data) {
-							self.sessionInfoReceived(data);
-						});
-					}
+					self.getSessionInfo();
 				} else {
 					console.warn("SPOTIFY: No results found");
 					if (isFunction(params.onError)) {
@@ -115,6 +111,14 @@ function Radio() {
 			}
 		});
 	};
+	
+	self.getSessionInfo = function() {
+		if (isFunction(self.sessionInfoReceived)) {
+			echonest.makeRequest("playlist/session_info", {"session_id": self.sessionId}, function(data) {
+				self.sessionInfoReceived(data);
+			});
+		}
+	}
 	
 	self.trackChanged = function(event) {
 		console.log("SPOTIFY: playerStateChanged", event);

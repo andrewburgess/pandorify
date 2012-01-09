@@ -11,5 +11,22 @@
     ],
 	"RequiredPermissions": [
 		"http://*.echonest.com"
+	],
+	"ApiPermissions": {
+		"core": ["private"]
+	},
+	"DefaultTabs": [
+		{
+			"arguments": "create",
+			"title": {
+				"en": "Create Station"
+			}
+		},
+		{
+			"arguments": "radio",
+			"title": {
+				"en": "Radio"
+			}
+        }
 	]
 }

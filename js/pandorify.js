@@ -11,6 +11,23 @@ var radio = new Radio();
 
 radio.sessionInfoReceived = processSessionInfo;
 
+sp.core.addEventListener("argumentsChanged", handleArgsChanged);
+
+function handleArgsChanged() {
+	var args = sp.core.getArguments();
+	switch (args[0]) {
+		case "create":
+			$("#page").load("create-station.html");
+			break;
+		case "radio":
+			$("#page").load("radio.html", function() {
+				setCurrentlyPlayingTrack();
+				radio.getSessionInfo();
+			});
+			break;
+	}
+}
+
 function setCurrentlyPlayingTrack() {
 	if (sp.trackPlayer.getPlayingContext()[0] === radio.tempPlaylist.uri) {
 		var track = sp.trackPlayer.getNowPlayingTrack().track;
@@ -83,14 +100,17 @@ function startStation(type, uri) {
 			$("#page").load("radio.html", function() {
 				radio.createDescriptionStation(uri);
 				$("#radio").find("h2").find("span").html("based on " + uri);
+				
+				window.location = "spotify:app:pandorify:radio";
 			});
 			break;
 		case "artist":
 			$("#page").load("radio.html", function() {
 				models.Artist.fromURI(uri, function(artist) {
 					radio.createArtistStation(artist);
-					
 					$("#radio").find("h2").find("span").append("based on ").append($(document.createElement("a")).attr("href", uri).text(artist.name.decodeForText()));
+					
+					window.location = "spotify:app:pandorify:radio";
 				});
 			});
 			break;
@@ -104,6 +124,8 @@ function startStation(type, uri) {
 					for (var i = 1; i < track.artists.length; i++) {
 						$("#radio").find("h2").find("span").append(", ").append($(document.createElement("a")).attr("href", track.artists[i].uri).text(track.artists[i].name.decodeForText()));
 					}
+					
+					window.location = "spotify:app:pandorify:radio";
 				});	
 			});			
 			break;
@@ -251,7 +273,7 @@ function processTracks(tracks) {
 }
 
 function setupSearchContainers() {
-	var username = sp.core.user == null ? "deceptacle" : sp.core.user.username;
+	var username = sp.core.user.username;
 	$("#spotify-results").empty().show();
 	
 	sp.social.getToplist("artist", "user", username,
