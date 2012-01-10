@@ -14,16 +14,21 @@ radio.sessionInfoReceived = processSessionInfo;
 sp.core.addEventListener("argumentsChanged", handleArgsChanged);
 
 function handleArgsChanged() {
+	console.log("args changed", sp.core.getArguments());
+
 	var args = sp.core.getArguments();
 	switch (args[0]) {
 		case "create":
-			$("#page").load("create-station.html");
+			$("#radio-search").val("");
+			setupSearchContainers();
+		
+			$("#create-station").show();
+			$("#radio").hide();
 			break;
 		case "radio":
-			$("#page").load("radio.html", function() {
-				setCurrentlyPlayingTrack();
-				radio.getSessionInfo();
-			});
+			$("#radio").show();
+			$("#create-station").hide();
+		
 			break;
 	}
 }
@@ -95,45 +100,30 @@ function initialize() {
 }
 
 function startStation(type, uri) {
+	window.location = "spotify:app:pandorify:radio";
 	switch (type) {
 		case "description":
-			$("#page").load("radio.html", function() {
-				radio.createDescriptionStation(uri);
-				$("#radio").find("h2").find("span").html("based on " + uri);
-				
-				window.location = "spotify:app:pandorify:radio";
-			});
+			radio.createDescriptionStation(uri);
+			$("#radio").find("h2").find("span").html("based on " + uri);
 			break;
 		case "artist":
-			$("#page").load("radio.html", function() {
-				models.Artist.fromURI(uri, function(artist) {
-					radio.createArtistStation(artist);
-					$("#radio").find("h2").find("span").append("based on ").append($(document.createElement("a")).attr("href", uri).text(artist.name.decodeForText()));
-					
-					window.location = "spotify:app:pandorify:radio";
-				});
+			models.Artist.fromURI(uri, function(artist) {
+				radio.createArtistStation(artist);
+				$("#radio").find("h2").find("span").append("based on ").append($(document.createElement("a")).attr("href", uri).text(artist.name.decodeForText()));
 			});
 			break;
 		case "track":
-			$("#page").load("radio.html", function() {
-				models.Track.fromURI(uri, function(track) {
-					radio.createTrackStation(track);
-					
-					$("#radio").find("h2").find("span").append("based on ").append($(document.createElement("a")).attr("href", track.album.uri).text(track.name.decodeForText())).append(" by ");
-					$("#radio").find("h2").find("span").append($(document.createElement("a")).attr("href", track.artists[0].uri).text(track.artists[0].name.decodeForText()));
-					for (var i = 1; i < track.artists.length; i++) {
-						$("#radio").find("h2").find("span").append(", ").append($(document.createElement("a")).attr("href", track.artists[i].uri).text(track.artists[i].name.decodeForText()));
-					}
-					
-					window.location = "spotify:app:pandorify:radio";
-				});	
-			});			
+			models.Track.fromURI(uri, function(track) {
+				radio.createTrackStation(track);
+				
+				$("#radio").find("h2").find("span").append("based on ").append($(document.createElement("a")).attr("href", track.album.uri).text(track.name.decodeForText())).append(" by ");
+				$("#radio").find("h2").find("span").append($(document.createElement("a")).attr("href", track.artists[0].uri).text(track.artists[0].name.decodeForText()));
+				for (var i = 1; i < track.artists.length; i++) {
+					$("#radio").find("h2").find("span").append(", ").append($(document.createElement("a")).attr("href", track.artists[i].uri).text(track.artists[i].name.decodeForText()));
+				}
+			});	
 			break;
 	}
-	
-	$("#start").fadeOut("fast", function() {
-		$("#radio").fadeIn("fast");
-	});
 	
 	sp.trackPlayer.addEventListener("playerStateChanged", playerStateChanged);
 }

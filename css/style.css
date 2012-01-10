@@ -16,7 +16,7 @@
 	font-size: 20px;
 }
 
-#start {
+#create-station {
 	text-align: center;
 	border-radius: 5px;
 	border: 1px solid #aaa;
@@ -26,11 +26,11 @@
 	margin: 0 auto;
 }
 
-#start #search-area {
+#create-station #search-area {
 	margin-top: 15px;
 }
 
-#start input {
+#create-station input {
 	width: 80%;
 }
 

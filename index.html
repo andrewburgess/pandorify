@@ -8,8 +8,8 @@
 	<link rel="stylesheet" href="css/style.css" />
 	<link rel="stylesheet" href="css/jquery-ui.css" />
 	
-	<script src="js/jquery.min.js"></script>
-	<script src="js/jquery-ui.min.js"></script>
+	<script src="js/jquery.js"></script>
+	<script src="js/jquery-ui.js"></script>
 	<script type="text/javascript">
 		var sp = getSpotifyApi(1);
 	</script>
@@ -22,7 +22,23 @@
 		
 		$(document).ready(function() {	
 			initialize();
-			$("#page").load("create-station.html");
+			
+			$("#radio-search").val("");
+			setupSearchContainers();
+			
+			$("#radio").hide();
+			$("#radio-search").keyup(Autocompleter.interceptKeypress);
+			
+			$("#session-info").dialog({ autoOpen: false, maxWidth: Math.round($(document).width() * 0.8), maxHeight: Math.round($(document).height() * 0.9) });
+			$("#session-info-button").click(function() {
+				$("#session-info").dialog("open");
+			});
+			
+			if (!(sp.trackPlayer.getPlayingContext()[0] === radio.tempPlaylist.uri)) {
+				window.location = "spotify:app:pandorify:create";
+			} else {
+				window.location = "spotify:app:pandorify:radio";
+			}
 		});		
 	</script>
 </head>
@@ -32,7 +48,39 @@
 			<h1>Pandorify</h1>
 		</div>
 		<div id="page">
+			<div id="create-station">
+				<h2>Create a Station</h2>
+				<p>Pandorify uses the EchoNest platform to find you awesome new tunes based on the information you provide</p>
+				<div id="search-area">
+					<input id="radio-search" type="search" class="input" placeholder="Search for artists, songs, or descriptions..." />
+				</div>
+				<div id="result-area">
+					<div class="right result-container">
+						<h3>Description Matches</h3>
+						<div id="description-results"></div>
+					</div>
+					<div id="spotify-container" class="result-container">
+						<h3>Spotify Matches</h3>
+						<div id="spotify-results"></div>
+					</div>
+				</div>
+			</div>
 			
+			<div id="radio">
+				<div id="session-info-button">
+					Show Session Info
+				</div>
+				<h2>Listening to Radio <span></span></h2>
+				<div class="clear"></div>
+				<div id="current-playing">
+					<div id="artist-image"></div>
+					<div id="track-info">
+						<div id="track-name"></div>
+						<div id="artist-name"></div>
+					</div>
+					<div class="clear"></div>
+				</div>
+			</div>
 		</div>
 	</div>
 	
@@ -43,5 +91,6 @@
 			</div>
 		</div>
 	</div>
+	
 </body>
 </html>
