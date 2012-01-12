@@ -63,6 +63,8 @@ function Radio() {
 					sp.trackPlayer.addEventListener("playerStateChanged", self.trackChanged);
 					self.playPlaylist(self.tempPlaylist.uri);
 					self.radioPlaying = true;
+					
+					setTimeout(self.checkPlayback, 1000);
 				}
 			});
 		});
@@ -122,12 +124,10 @@ function Radio() {
 	
 	self.trackChanged = function(event) {
 		console.log("SPOTIFY: playerStateChanged", event);
-		console.log(sp.trackPlayer.getNowPlayingTrack().position + ", " + sp.trackPlayer.getNowPlayingTrack().length);
 		
 		if (event.data.curtrack == true) {
 			if (sp.trackPlayer.getPlayingContext()[0] === self.tempPlaylist.uri) {
 				self.playerImage.playing = sp.trackPlayer.getIsPlaying();
-				self.getNextTrack({});
 			}
 			else if (sp.trackPlayer.getIsPlaying() == false) {
 				self.getNextTrack({}, self.playPlaylist);
@@ -147,5 +147,18 @@ function Radio() {
 			onFailure: function () { },
 			onComplete: function () { }
 		});
+	};
+	
+	self.checkPlayback = function() {
+		if (sp.trackPlayer.getPlayingContext()[0] === self.tempPlaylist.uri) {
+			var track = sp.trackPlayer.getNowPlayingTrack();
+			if (track.position >= track.length - 5000) {		//5 seconds left in the track, get the next one
+				self.getNextTrack({});
+				setTimeout(self.checkPlayback, 6000);
+				return;
+			}
+		}
+		
+		setTimeout(self.checkPlayback, 1000);
 	};
 }
