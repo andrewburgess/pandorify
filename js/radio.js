@@ -15,6 +15,20 @@ function Radio() {
 	
 	this.nextOptions = {}
 	
+	self.banArtist = function() {
+		self.getNextTrack({"ban": "artist"}, function() {
+			self.currentTrack = null; 
+			sp.trackPlayer.skipToNextTrack(); 
+		});
+	};
+	
+	self.banTrack = function() {
+		self.getNextTrack({"ban": "song"}, function() {
+			self.currentTrack = null;
+			sp.trackPlayer.skipToNextTrack();
+		});
+	};
+	
 	self.createArtistStation = function(artist) {
 		if (artist == null) return;
 		console.log("PANDORIFY: Starting station with artist " + artist.data.name.decodeForText(), artist);

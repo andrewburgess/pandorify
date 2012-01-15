@@ -184,13 +184,8 @@
 	margin-right: 5px;
 }
 
-#radio {
-	width: 90%;
-	position: absolute;
-}
-
 #ban-buttons {
-	position: absolute;
-	bottom: 40px;
-	right: 10px;
+	float:right;
+	margin-top:110px;
+	margin-right:10px;
 }

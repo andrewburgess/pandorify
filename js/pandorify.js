@@ -14,6 +14,20 @@ radio.sessionInfoReceived = processSessionInfo;
 
 sp.core.addEventListener("argumentsChanged", handleArgsChanged);
 
+$(document).ready(function() {
+	$("#ban-artist").click(function(e) {
+		radio.banArtist();
+		
+		e.preventDefault();
+	});
+	
+	$("#ban-track").click(function(e) {
+		radio.banTrack();
+		
+		e.preventDefault();
+	});
+});
+
 function handleArgsChanged() {
 	console.log("args changed", sp.core.getArguments());
 
@@ -152,6 +166,11 @@ function updateHistory() {
 	console.log("Updating history");
 	if (radio.tempPlaylist.length == 1)
 		return;
+		
+	if (radio.currentTrack == null) {
+		radio.currentTrack = sp.trackPlayer.getNowPlayingTrack().track.uri;
+		return;
+	}
 	
 	models.Track.fromURI(radio.currentTrack, function(track) {
 		console.log(track);
