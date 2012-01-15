@@ -3,13 +3,15 @@ function Radio() {
 	var self = this;
 	
 	this.sessionId = "";
-	this.radioPlaying = false;
 	
 	this.tempPlaylist = sp.core.getTemporaryPlaylist("Pandorify Temp " + (new Date()).toISOString());
 	this.playerImage = new views.Player();
 	this.playerImage.context = this.tempPlaylist;
 	
 	this.sessionInfoReceived = null;
+	
+	this.currentTrack = null;
+	this.lookingForNext = false;
 	
 	this.nextOptions = {}
 	
@@ -51,6 +53,9 @@ function Radio() {
 			console.log("ECHONEST: Session ID - " + data.session_id);
 			self.sessionId = data.session_id;
 			
+			savedStations.push(data.session_id);
+			localStorage.setItem("SavedStations", JSON.stringify(savedStations));
+			
 			self.setNextTrack({
 				"artist": data.songs[0].artist_name,
 				"track": data.songs[0].title,
@@ -62,9 +67,10 @@ function Radio() {
 					
 					sp.trackPlayer.addEventListener("playerStateChanged", self.trackChanged);
 					self.playPlaylist(self.tempPlaylist.uri);
-					self.radioPlaying = true;
 					
-					setTimeout(self.checkPlayback, 1000);
+					self.currentTrack = self.tempPlaylist.get(0);
+					
+					setTimeout(self.checkPlayback, 2000);
 				}
 			});
 		});
@@ -128,6 +134,7 @@ function Radio() {
 		if (event.data.curtrack == true) {
 			if (sp.trackPlayer.getPlayingContext()[0] === self.tempPlaylist.uri) {
 				self.playerImage.playing = sp.trackPlayer.getIsPlaying();
+				self.lookingForNext = false;
 			}
 			else if (sp.trackPlayer.getIsPlaying() == false) {
 				self.getNextTrack({}, self.playPlaylist);
@@ -142,7 +149,7 @@ function Radio() {
 		sp.trackPlayer.playTrackFromContext(self.tempPlaylist.uri, index, "", {
 			onSuccess: function() { 
 				sp.trackPlayer.setPlayingContextCanSkipPrev(self.tempPlaylist.uri, false);
-				sp.trackPlayer.setPlayingContextCanSkipNext(self.tempPlaylist.uritrue);
+				sp.trackPlayer.setPlayingContextCanSkipNext(self.tempPlaylist.uri, true);
 			},
 			onFailure: function () { },
 			onComplete: function () { }
@@ -152,10 +159,9 @@ function Radio() {
 	self.checkPlayback = function() {
 		if (sp.trackPlayer.getPlayingContext()[0] === self.tempPlaylist.uri) {
 			var track = sp.trackPlayer.getNowPlayingTrack();
-			if (track.position >= track.length - 5000) {		//5 seconds left in the track, get the next one
+			if (track.position >= track.length - 5000 && !self.lookingForNext) {	//5 seconds left in the track, get the next one
+				self.lookingForNext = true;
 				self.getNextTrack({});
-				setTimeout(self.checkPlayback, 6000);
-				return;
 			}
 		}
 		

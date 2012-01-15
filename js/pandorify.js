@@ -4,6 +4,7 @@ var ui = sp.require("sp://import/scripts/ui");
 
 styles = new Array();
 moods = new Array();
+savedStations = new Array();
 
 var artistImage = new ui.SPImage("sp://import/img/placeholders/300-album.png");
 
@@ -96,6 +97,9 @@ function initialize() {
 		moods = JSON.parse(localStorage.getItem("EchoNestMoods"));
 	}
 	
+	if (localStorage.getItem("SavedStations") != null) {
+		savedStations = JSON.parse(localStorage.getItem("SavedStations"));
+	}
 	
 }
 
@@ -139,7 +143,32 @@ function playerStateChanged(event) {
 		$("#track-name").empty().append($(document.createElement("a")).attr("href", track.album.uri).text(track.name.decodeForText()));
 		$("#album-name").empty().append($(document.createElement("a")).attr("href", track.album.uri).text(track.album.name.decodeForText()));
 		getArtistNameLinkList($("#artist-name").empty(), track.artists);
+		
+		updateHistory();
 	}
+}
+
+function updateHistory() {
+	console.log("Updating history");
+	if (radio.tempPlaylist.length == 1)
+		return;
+	
+	models.Track.fromURI(radio.currentTrack, function(track) {
+		console.log(track);
+		var el = $(document.createElement("div")).css("padding-bottom", "5px");
+		el.append($(document.createElement("div")).addClass("history-image").append($(document.createElement("a")).attr("href", track.data.album.uri)));
+		var img = new ui.SPImage(track.data.album.cover);
+		el.children().children().append(img.node);
+		el.append($(document.createElement("div")).text(track.data.name.decodeForText()));
+		var artists = $(document.createElement("div"));
+		getArtistNameLinkList(artists, track.data.artists);
+		el.append(artists);
+		el.append($(document.createElement("div")).addClass("clear"));
+		
+		$("#play-history").prepend(el);
+		
+		radio.currentTrack = sp.trackPlayer.getNowPlayingTrack().track.uri;
+	});
 }
 
 function autocompleteSearch() {

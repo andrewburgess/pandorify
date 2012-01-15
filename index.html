@@ -2,7 +2,6 @@
 <html>
 <head>
 	<meta charset="utf-8">
-	<title>My First App</title>
 	<link rel="stylesheet" href="sp://import/css/api.css" />
 	<link rel="stylesheet" href="sp://import/css/eve.css" />
 	<link rel="stylesheet" href="css/style.css" />
@@ -67,9 +66,9 @@
 			</div>
 			
 			<div id="radio">
-				<div id="session-info-button">
+				<button id="session-info-button" class="button">
 					Show Session Info
-				</div>
+				</button>
 				<h2>Listening to Radio <span></span></h2>
 				<div class="clear"></div>
 				<div id="current-playing">
@@ -77,6 +76,10 @@
 					<div id="track-info">
 						<div id="track-name"></div>
 						<div id="artist-name"></div>
+					</div>
+					<div id="ban-buttons">
+						<button id="ban-artist" class="button">Ban Artist</button>
+						<button id="ban-track" class="button">Ban Track</button>
 					</div>
 					<div class="clear"></div>
 				</div>
