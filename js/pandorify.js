@@ -2,6 +2,93 @@ var views = sp.require("sp://import/scripts/api/views");
 var models = sp.require("sp://import/scripts/api/models");
 var ui = sp.require("sp://import/scripts/ui");
 
+var player = models.player;
+var library = models.library;
+var application = models.application;
+
+var el = {
+	document: $(document),
+	page: $("#page"),
+	createStation: $("#create-station"),
+	searchInput: $("#radio-search"),
+	searchResults: $("#result-area"),
+	sessionInfoButton: $("#session-info-button"),
+	radio: $("#radio"),
+	radioDescription: $("#radio-description"),
+	currentlyPlaying: $("#current-playing"),
+	banArtist: $("#ban-artist"),
+	banTrack: $("#ban-track"),
+	artistImage: $("#artist-image"),
+	trackName: $("#track-name"),
+	artistName: $("#artist-name"),
+	playHistory: $("#playHistory"),
+	sessionDialog: $("#session-info"),
+	sessionTerms: $("#session-terms")
+};
+
+//Note: use $.extend({defaults}, passedIn) for parameterized functions
+
+function Pandorify() {
+	console.log("PANDORIFY: Creating new Pandorify object");
+	
+	var self = this;
+	this.styles = new Array();
+	this.moods = new Array();
+	this.savedStations = new Array();
+	this.radio = new Radio();
+	
+	// Gets the application to an initial state where good stuff can happen
+	this.initialize = function() {
+		el.radio.hide();
+	
+		el.searchInput.val("");
+		el.searchInput.keyup(self.autocompleter.keypress);
+		
+		el.sessionDialog.dialog({autoOpen: false, maxWidth: Math.round(el.document.width() * 0.8), maxHeight: Math.round(el.document.height() * 0.9)});
+		el.sessionInfoButton.click(function() { el.sessionDialog.dialog("open"); });
+		
+		self.loadEchonestTerms();
+	};
+	
+	//Spaces out executing a search based on keypresses
+	this.autocompleter = {
+		interval: 100,
+		lastKeypress: null,
+		keypress: function() {
+			self.autocompleter.lastKeypress = new Date().getTime();
+			setTimeout(function() {
+				var currentTime = new Date().getTime();
+				if (currentTime - self.autocompleter.lastKeypress > self.autocompleter.interval) {
+					console.log("SEARCH!");
+				}
+			}, self.autocompleter.interval + 100);
+		}
+	};
+	
+	this.loadEchonestTerms = function() {
+		console.log("PANDORIFY: Loading EchoNest terms");
+		
+		var worker = function(key, params, arr) {
+			if (localStorage.getItem(key) == null) {
+				echonest.makeRequest("artist/list_terms", params, function(data) {
+					for (var i = 0; i < data.terms.length; i++)
+						arr.push(data.terms[i].name);
+					localStorage.setItem(key, JSON.stringify(arr));
+				});
+			}
+		};
+		
+		worker("EchoNestStyles", {"type": "style"}, self.styles);
+		worker("EchoNestMoods", {"type": "mood"}, self.moods);
+	};
+};
+
+/*
+Old
+var views = sp.require("sp://import/scripts/api/views");
+var models = sp.require("sp://import/scripts/api/models");
+var ui = sp.require("sp://import/scripts/ui");
+
 styles = new Array();
 moods = new Array();
 savedStations = new Array();
@@ -122,19 +209,19 @@ function startStation(type, uri) {
 	switch (type) {
 		case "description":
 			radio.createDescriptionStation(uri);
-			$("#radio").find("h2").find("span").html("based on " + uri);
+			$("#radio").find("h2").find("span").empty().html("based on " + uri);
 			break;
 		case "artist":
 			models.Artist.fromURI(uri, function(artist) {
 				radio.createArtistStation(artist);
-				$("#radio").find("h2").find("span").append("based on ").append($(document.createElement("a")).attr("href", uri).text(artist.name.decodeForText()));
+				$("#radio").find("h2").find("span").empty().append("based on ").append($(document.createElement("a")).attr("href", uri).text(artist.name.decodeForText()));
 			});
 			break;
 		case "track":
 			models.Track.fromURI(uri, function(track) {
 				radio.createTrackStation(track);
 				
-				$("#radio").find("h2").find("span").append("based on ").append($(document.createElement("a")).attr("href", track.album.uri).text(track.name.decodeForText())).append(" by ");
+				$("#radio").find("h2").find("span").empty().append("based on ").append($(document.createElement("a")).attr("href", track.album.uri).text(track.name.decodeForText())).append(" by ");
 				$("#radio").find("h2").find("span").append($(document.createElement("a")).attr("href", track.artists[0].uri).text(track.artists[0].name.decodeForText()));
 				for (var i = 1; i < track.artists.length; i++) {
 					$("#radio").find("h2").find("span").append(", ").append($(document.createElement("a")).attr("href", track.artists[i].uri).text(track.artists[i].name.decodeForText()));
@@ -171,6 +258,9 @@ function updateHistory() {
 		radio.currentTrack = sp.trackPlayer.getNowPlayingTrack().track.uri;
 		return;
 	}
+	
+	if (radio.currentTrack == sp.trackPlayer.getNowPlayingTrack().track.uri)
+		return;
 	
 	models.Track.fromURI(radio.currentTrack, function(track) {
 		console.log(track);
@@ -347,3 +437,4 @@ function setupSearchContainers() {
 		startStation("description", $(this).text());
 	});
 }
+*/

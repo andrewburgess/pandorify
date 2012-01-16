@@ -35,17 +35,3 @@ function getArtistNameLinkList(div, artists) {
 		div.append($(document.createElement("a")).attr("href", artists[i].uri).text(artists[i].name.decodeForText()));
 	}
 }
-
-var Autocompleter = {
-	interval: 100,
-	lastKeypress: null,
-	interceptKeypress: function() {
-		Autocompleter.lastKeypress = new Date().getTime();
-		setTimeout(function() {
-			var currentTime = new Date().getTime();
-			if (currentTime - Autocompleter.lastKeypress > Autocompleter.interval) {
-				autocompleteSearch();
-			}
-		}, Autocompleter.interval + 100);
-	}
-};

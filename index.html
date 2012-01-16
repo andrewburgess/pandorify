@@ -6,40 +6,6 @@
 	<link rel="stylesheet" href="sp://import/css/eve.css" />
 	<link rel="stylesheet" href="css/style.css" />
 	<link rel="stylesheet" href="css/jquery-ui.css" />
-	
-	<script src="js/jquery.js"></script>
-	<script src="js/jquery-ui.js"></script>
-	<script type="text/javascript">
-		var sp = getSpotifyApi(1);
-	</script>
-	<script src="js/utility.js"></script>
-	<script src="js/radio.js"></script>
-	<script src="js/pandorify.js"></script>
-	<script type="text/javascript">
-		
-		var echonest = sp.require("js/echonest");	
-		
-		$(document).ready(function() {	
-			initialize();
-			
-			$("#radio-search").val("");
-			setupSearchContainers();
-			
-			$("#radio").hide();
-			$("#radio-search").keyup(Autocompleter.interceptKeypress);
-			
-			$("#session-info").dialog({ autoOpen: false, maxWidth: Math.round($(document).width() * 0.8), maxHeight: Math.round($(document).height() * 0.9) });
-			$("#session-info-button").click(function() {
-				$("#session-info").dialog("open");
-			});
-			
-			if (!(sp.trackPlayer.getPlayingContext()[0] === radio.tempPlaylist.uri)) {
-				window.location = "spotify:app:pandorify:create";
-			} else {
-				window.location = "spotify:app:pandorify:radio";
-			}
-		});		
-	</script>
 </head>
 <body>
 	<div id="container">
@@ -69,7 +35,7 @@
 				<button id="session-info-button" class="button">
 					Show Session Info
 				</button>
-				<h2>Listening to Radio <span></span></h2>
+				<h2>Listening to Radio <span id="radio-description"></span></h2>
 				<div class="clear"></div>
 				<div id="current-playing">
 					<div id="ban-buttons">
@@ -98,5 +64,18 @@
 		</div>
 	</div>
 	
+	<script src="js/jquery.js"></script>
+	<script src="js/jquery-ui.js"></script>
+	<script type="text/javascript">
+		var sp = getSpotifyApi(1);
+	</script>
+	<script src="js/utility.js"></script>
+	<script src="js/radio.js"></script>
+	<script src="js/pandorify.js"></script>
+	<script type="text/javascript">
+		var echonest = sp.require("js/echonest");
+		var pandorify = new Pandorify();
+		pandorify.initialize();
+	</script>
 </body>
 </html>
