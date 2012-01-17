@@ -12,6 +12,8 @@ var el = {
 	createStation: $("#create-station"),
 	searchInput: $("#radio-search"),
 	searchResults: $("#result-area"),
+	spotifyResults: $("#spotify-results"),
+	descriptionResults: $("#description-results"),
 	sessionInfoButton: $("#session-info-button"),
 	radio: $("#radio"),
 	radioDescription: $("#radio-description"),
@@ -59,7 +61,7 @@ function Pandorify() {
 			setTimeout(function() {
 				var currentTime = new Date().getTime();
 				if (currentTime - self.autocompleter.lastKeypress > self.autocompleter.interval) {
-					console.log("SEARCH!");
+					self.search(el.searchInput.val());
 				}
 			}, self.autocompleter.interval + 100);
 		}
@@ -80,6 +82,53 @@ function Pandorify() {
 		
 		worker("EchoNestStyles", {"type": "style"}, self.styles);
 		worker("EchoNestMoods", {"type": "mood"}, self.moods);
+	};
+	
+	this.search = function(query) {
+		var getArtistResult = function(artist) {
+			var outerDiv = $("<div></div>").addClass("artist-result");
+			var imgDiv = $("<div></div>").addClass("left").addClass("artist-search-image");
+			var img = new ui.SPImage(artist.portrait.length > 0 ? artist.portrait : "sp://import/img/placeholders/64-artist.png");
+			outerDiv.append(imgDiv.append(img.node)).
+					 append(artist.name.decodeForText()).
+					 attr("data-uri", artist.uri);
+			return outerDiv;			
+		};
+			
+		var search = new models.Search(query);
+		search.localResults = models.LOCALSEARCHRESULTS.APPEND;
+		search.pageSize = 10;
+		search.searchAlbums = false;
+		search.searchPlaylists = false;
+		
+		search.observe(models.EVENT.CHANGE, function() {
+			console.log("CHANGED");
+			el.spotifyResults.empty();
+			if (search.artists.length) {
+				//Process artist results
+				var artistDiv = $("<div></div>").append($("<strong></strong>").html("Artist Results")).
+												 append($("<hr />"));
+				$.each(search.artists, function(index, artist) {
+					console.log(artist);
+					artistDiv.append(getArtistResult(artist.data));
+				});
+				
+				el.spotifyResults.append(artistDiv);
+				artistDiv.find(".artist-result:even").addClass("result-even");
+				$.each(artistDiv.find(".artist-result"), function(index, value) {
+					if ($(value).height() > 17) {
+						$(value).find(".artist-search-image").css("margin-top", -7);
+					}
+				});
+			}
+			
+			if (search.tracks.length) {
+				//Process track results
+			}
+		});
+		search.appendNext();
+		
+		//Search description results
 	};
 };
 
