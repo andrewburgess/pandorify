@@ -94,6 +94,17 @@ function Pandorify() {
 					 attr("data-uri", artist.uri);
 			return outerDiv;			
 		};
+		
+		var getTrackResult = function(track) {
+			var outerDiv = $("<div></div>").addClass("song-result");
+			var imgDiv = $("<div></div>").addClass("left").addClass("song-search-image");
+			var img = new ui.SPImage(track.album.cover.length > 0 ? track.album.cover: "sp://import/img/placeholders/50-album.png");
+			outerDiv.append(imgDiv.append(img.node)).
+					 append($("<div></div>").html(track.name.decodeForText()).addClass("song-search-title")).
+					 append($("<div></div>").html(getArtistNameList(track.artists)).addClass("song-search-artist")).
+					 attr("data-uri", track.uri);
+			return outerDiv;
+		};
 			
 		var search = new models.Search(query);
 		search.localResults = models.LOCALSEARCHRESULTS.APPEND;
@@ -109,7 +120,6 @@ function Pandorify() {
 				var artistDiv = $("<div></div>").append($("<strong></strong>").html("Artist Results")).
 												 append($("<hr />"));
 				$.each(search.artists, function(index, artist) {
-					console.log(artist);
 					artistDiv.append(getArtistResult(artist.data));
 				});
 				
@@ -123,7 +133,19 @@ function Pandorify() {
 			}
 			
 			if (search.tracks.length) {
-				//Process track results
+				var trackDiv = $("<div></div>").append($("<strong></strong>").html("Track Results")).
+												append($("<hr />"));
+				$.each(search.tracks, function(index, track) {
+					trackDiv.append(getTrackResult(track.data));
+				});
+				
+				el.spotifyResults.append(trackDiv);
+				trackDiv.find(".song-result:even").addClass("result-even");
+				$.each(trackDiv.find(".song-result"), function(index, value) {
+					if ($(value).height() > 34) {
+						$(value).find(".song-search-image").css("margin-top", -9 + ($(value).height() - 36) / 2);
+					}
+				});
 			}
 		});
 		search.appendNext();
