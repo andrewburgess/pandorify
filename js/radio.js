@@ -8,8 +8,6 @@ function Radio() {
 	this.playerImage = new views.Player();
 	this.playerImage.context = this.tempPlaylist;
 	
-	this.sessionInfoReceived = null;
-	
 	this.currentTrack = null;
 	this.lookingForNext = false;
 	
@@ -132,12 +130,25 @@ function Radio() {
 	};
 	
 	self.getSessionInfo = function() {
-		if (isFunction(self.sessionInfoReceived)) {
-			echonest.makeRequest("playlist/session_info", {"session_id": self.sessionId}, function(data) {
-				self.sessionInfoReceived(data);
-			});
-		}
-	}
+		echonest.makeRequest("playlist/session_info", {"session_id": self.sessionId}, function(data) {
+			self.processSessionInfo(data);
+		});
+	};
+	
+	self.processSessionInfo = function(data) {
+		el.sessionTerms.empty();
+		$.each(data.terms, function(index, term) {
+			var next = $("<div></div>").addClass("session-term");
+			var width = Math.round(term.frequency * 100);
+			var divAmount = $("<div></div>").addClass("session-amount").css("width", width + "%");
+			next.append($("<div></div>").addClass("session-description").text(term.name));
+			next.append(divAmount);
+			el.sessionTerms.append(next);			
+		});
+		
+		el.sessionDialog.css("max-height", Math.round($(document).height() * 0.9));
+		el.sessionDialog.css("max-width", Math.round($(document).width() * 0.5));
+	};
 	
 	self.trackChanged = function(event) {
 		console.log("SPOTIFY: playerStateChanged", event);
