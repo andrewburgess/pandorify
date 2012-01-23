@@ -49,9 +49,9 @@ function Pandorify() {
 		el.sessionDialog.dialog({autoOpen: false, maxWidth: Math.round(el.document.width() * 0.8), maxHeight: Math.round(el.document.height() * 0.9)});
 		el.sessionInfoButton.click(function() { el.sessionDialog.dialog("open"); });
 		
-		self.populateEmptyResults();
-		
 		self.loadEchonestTerms();
+		
+		self.populateEmptyResults();
 	};
 	
 	//Spaces out executing a search based on keypresses
@@ -79,13 +79,31 @@ function Pandorify() {
 						arr.push(data.terms[i].name);
 					localStorage.setItem(key, JSON.stringify(arr));
 					
-					callback();
+					callback(arr);
 				});
 			}
 		};
 		
-		worker("EchoNestStyles", {"type": "style"}, self.styles);
-		worker("EchoNestMoods", {"type": "mood"}, self.moods);
+		if (localStorage.getItem("EchoNestStyles")) {
+			self.styles = JSON.parse(localStorage.getItem("EchoNestStyles"));
+		} else {		
+			worker("EchoNestStyles", {"type": "style"}, self.styles, function(arr) {
+				console.log(arr);
+				$.each(arr, function(index, e) {
+					console.log(e);
+					self.processDescriptionResult(e);
+				});
+			});
+		}
+		if (localStorage.getItem("EchoNestMoods")) {
+			self.moods = JSON.parse(localStorage.getItem("EchoNestMoods"));
+		} else {
+			worker("EchoNestMoods", {"type": "mood"}, self.moods, function(arr) {
+				$.each(arr, function(index, e) {
+					self.processDescriptionResult(e);
+				});
+			});
+		}
 	};
 	
 	this.processArtistSearch = function(artists) {
@@ -147,6 +165,10 @@ function Pandorify() {
 		});
 	};
 	
+	this.processDescriptionResult = function(desc) {
+		el.descriptionResults.append("<div class='description-result'>" + desc + "</div>");
+	};
+	
 	this.search = function(query) {			
 		if (query.length == 0) {
 			self.populateEmptyResults();
@@ -171,7 +193,19 @@ function Pandorify() {
 		});
 		search.appendNext();
 		
-		//Search description results
+		el.descriptionResults.empty();
+		for (var x in self.styles) {
+			if (self.styles[x].startsWith(query)) {
+				self.processDescriptionResult(self.styles[x]);
+			}
+		}
+		
+		for (var x in self.moods) {
+			if (self.moods[x].startsWith(query)) {
+				self.processDescriptionResult(self.moods[x]);
+			}
+		}
+
 	};
 	
 	this.populateEmptyResults = function() {
@@ -189,6 +223,14 @@ function Pandorify() {
 			onSuccess: function(results) {
 				self.processTrackSearch(results.tracks);
 			}
+		});
+		
+		el.descriptionResults.empty();
+		$.each(self.styles, function(index, style) {
+			self.processDescriptionResult(style);
+		});
+		$.each(self.moods, function(index, mood) {
+			self.processDescriptionResult(mood);
 		});
 	};
 };
