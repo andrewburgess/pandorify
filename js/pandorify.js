@@ -25,7 +25,8 @@ var el = {
 	artistName: $("#artist-name"),
 	playHistory: $("#playHistory"),
 	sessionDialog: $("#session-info"),
-	sessionTerms: $("#session-terms")
+	sessionTerms: $("#session-terms"),
+	radioTitle: $("#radio").find("h2").find("span")
 };
 
 //Note: use $.extend({defaults}, passedIn) for parameterized functions
@@ -49,8 +50,9 @@ function Pandorify() {
 		el.sessionDialog.dialog({autoOpen: false, maxWidth: Math.round(el.document.width() * 0.8), maxHeight: Math.round(el.document.height() * 0.9)});
 		el.sessionInfoButton.click(function() { el.sessionDialog.dialog("open"); });
 		
+		//application.observe(models.EVENT.ARGUMENTSCHANGED, self.handleArgsChanged);
+		sp.core.addEventListener("argumentsChanged", self.handleArgsChanged);
 		self.loadEchonestTerms();
-		
 		self.populateEmptyResults();
 	};
 	
@@ -66,6 +68,23 @@ function Pandorify() {
 					self.search(el.searchInput.val());
 				}
 			}, self.autocompleter.interval + 100);
+		}
+	};
+	
+	this.handleArgsChanged = function() {
+		console.log(application);
+		switch(application.arguments[0]) {
+			case "create":
+				el.searchInput.val("");
+				self.populateEmptyResults();
+				
+				el.createStation.show();
+				el.radio.hide();
+				break;
+			case "radio":
+				el.radio.show();
+				el.createStation.hide();
+				break;
 		}
 	};
 	
@@ -133,6 +152,10 @@ function Pandorify() {
 				$(value).find(".artist-search-image").css("margin-top", -7);
 			}
 		});
+		
+		$(".artist-result").click(function() {
+			self.startStation("artist", $(this).attr("data-uri"));
+		});
 	};
 	
 	this.processTrackSearch = function(tracks) {
@@ -163,6 +186,10 @@ function Pandorify() {
 				$(value).find(".song-search-image").css("margin-top", -9 + ($(value).height() - 36) / 2);
 			}
 		});
+		
+		$(".track-result").click(function() {
+			self.startStation("track", $(this).attr("data-uri"));
+		});
 	};
 	
 	this.processDescriptionResult = function(desc) {
@@ -190,6 +217,11 @@ function Pandorify() {
 			if (search.tracks.length) {
 				self.processTrackSearch(search.tracks);
 			}
+			
+			$(".artist-result").click(function() {
+				self.startStation("artist", $(this).attr("data-uri"));
+			});
+			
 		});
 		search.appendNext();
 		
@@ -199,13 +231,15 @@ function Pandorify() {
 				self.processDescriptionResult(self.styles[x]);
 			}
 		}
-		
 		for (var x in self.moods) {
 			if (self.moods[x].startsWith(query)) {
 				self.processDescriptionResult(self.moods[x]);
 			}
 		}
-
+		
+		$(".description-result").click(function() {
+			self.startStation("description", $(this).text());
+		});
 	};
 	
 	this.populateEmptyResults = function() {
@@ -232,6 +266,41 @@ function Pandorify() {
 		$.each(self.moods, function(index, mood) {
 			self.processDescriptionResult(mood);
 		});
+		
+		$(".description-result").click(function() {
+			self.startStation("description", $(this).text());
+		});
+	};
+	
+	this.startStation = function(type, uri) {
+		switch(type) {
+			case "description":
+				self.radio.createDescriptionStation(uri);
+				el.radio.find("h2").find("span").empty().html("based on " + uri);
+				break;
+			case "artist":
+				models.Artist.fromURI(uri, function(artist) {
+					self.radio.createArtistStation(artist);
+					el.radioTitle.empty().append("based on ").append(getLinkedArtist(artist));
+				});
+				break;
+			case "track":
+				models.Track.fromURI(uri, function(track) {
+					self.radio.createTrackStation(track);
+					
+					el.radioTitle.empty().append("based on ").append(getLinkedTrack(track)).append(" by ");
+					el.radioTitle.append(getArtistNameLinkList(track.artists));
+				});
+				break;
+		}
+
+		window.location = "spotify:app:pandorify:radio";
+		self.handleArgsChanged();	//NOTE: Seems I have to manually call this?
+		player.observe(models.EVENT.CHANGE, self.trackChanged);
+	};
+	
+	this.trackChanged = function(event) {
+	
 	};
 };
 

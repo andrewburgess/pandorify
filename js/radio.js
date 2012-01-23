@@ -67,9 +67,6 @@ function Radio() {
 			console.log("ECHONEST: Session ID - " + data.session_id);
 			self.sessionId = data.session_id;
 			
-			savedStations.push(data.session_id);
-			localStorage.setItem("SavedStations", JSON.stringify(savedStations));
-			
 			self.setNextTrack({
 				"artist": data.songs[0].artist_name,
 				"track": data.songs[0].title,

@@ -35,3 +35,11 @@ function getArtistNameLinkList(div, artists) {
 		div.append($(document.createElement("a")).attr("href", artists[i].uri).text(artists[i].name.decodeForText()));
 	}
 }
+
+function getLinkedArtist(artist) {
+	return $("<a></a>").attr("href", artist.uri).text(artist.name.decodeForText());
+}
+
+function getLinkedTrack(track) {
+	return $("<a></a>").attr("href", track.album.uri).text(track.name.decodeForText());
+};
