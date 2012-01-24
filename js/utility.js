@@ -28,12 +28,14 @@ function getArtistNameList(artists) {
 	return a;
 }
 
-function getArtistNameLinkList(div, artists) {
-	div.append($(document.createElement("a")).attr("href", artists[0].uri).text(artists[0].name.decodeForText()));
+function getArtistNameLinkList(artists) {
+	var div = $("<div></div>");
+	div.append("<a></a>").attr("href", artists[0].uri).text(artists[0].name.decodeForText());
 	for (var i = 1; i < artists.length; i++) {
 		div.append(", ");
-		div.append($(document.createElement("a")).attr("href", artists[i].uri).text(artists[i].name.decodeForText()));
+		div.append("<a></a>").attr("href", artists[i].uri).text(artists[i].name.decodeForText());
 	}
+	return div;
 }
 
 function getLinkedArtist(artist) {
@@ -42,4 +44,12 @@ function getLinkedArtist(artist) {
 
 function getLinkedTrack(track) {
 	return $("<a></a>").attr("href", track.album.uri).text(track.name.decodeForText());
-};
+}
+
+function getAlbumArt(track) {
+	return new ui.SPImage(track.album.cover.length > 0 ? track.album.cover: "sp://import/img/placeholders/50-album.png");
+}
+
+function getArtistPortrait(artist) {
+	return new ui.SPImage(artist.portrait.length > 0 ? artist.portrait : "sp://import/img/placeholders/64-artist.png");
+}

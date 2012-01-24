@@ -41,7 +41,7 @@ function Pandorify() {
 	this.radio = new Radio();
 	
 	// Gets the application to an initial state where good stuff can happen
-	this.initialize = function() {
+	this.initialize = function() {	
 		el.radio.hide();
 	
 		el.searchInput.val("");
@@ -128,9 +128,8 @@ function Pandorify() {
 	this.processArtistSearch = function(artists) {
 		var getArtistResult = function(artist) {
 			var outerDiv = $("<div></div>").addClass("artist-result");
-			var imgDiv = $("<div></div>").addClass("left").addClass("artist-search-image");
-			var img = new ui.SPImage(artist.portrait.length > 0 ? artist.portrait : "sp://import/img/placeholders/64-artist.png");
-			outerDiv.append(imgDiv.append(img.node)).
+			var portrait = getArtistPortrait(artist);
+			outerDiv.append($("<div></div>").append(portrait.node).addClass("left").addClass("artist-search-image")).
 					 append(artist.name.decodeForText()).
 					 attr("data-uri", artist.uri);
 			return outerDiv;
@@ -161,9 +160,8 @@ function Pandorify() {
 	this.processTrackSearch = function(tracks) {
 		var getTrackResult = function(track) {
 			var outerDiv = $("<div></div>").addClass("song-result");
-			var imgDiv = $("<div></div>").addClass("left").addClass("song-search-image");
-			var img = new ui.SPImage(track.album.cover.length > 0 ? track.album.cover: "sp://import/img/placeholders/50-album.png");
-			outerDiv.append(imgDiv.append(img.node)).
+			var art = getAlbumArt(track);
+			outerDiv.append($("<div></div>").append(art.node).addClass("left").addClass("song-search-image")).
 					 append($("<div></div>").html(track.name.decodeForText()).addClass("song-search-title")).
 					 append($("<div></div>").html(getArtistNameList(track.artists)).addClass("song-search-artist")).
 					 attr("data-uri", track.uri);
@@ -300,7 +298,16 @@ function Pandorify() {
 	};
 	
 	this.trackChanged = function(event) {
-	
+		if (self.radio.isCurrentContext() && event.data.curtrack) {
+			var track = player.track.data;
+			
+			$(self.radio.playerImage.image).empty();
+			$(self.radio.playerImage.image).append(getAlbumArt(track).node);
+			el.artistImage.empty().append(self.radio.playerImage.node);
+			
+			el.trackName.empty().append(getLinkedTrack(track));
+			el.artistName.empty().append(getArtistNameLinkList(track.artists));
+		}
 	};
 };
 

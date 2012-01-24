@@ -4,9 +4,9 @@ function Radio() {
 	
 	this.sessionId = "";
 	
-	this.tempPlaylist = sp.core.getTemporaryPlaylist("Pandorify Temp " + (new Date()).toISOString());
+	this.playlist = sp.core.getTemporaryPlaylist("Pandorify Temp " + (new Date()).toISOString());
 	this.playerImage = new views.Player();
-	this.playerImage.context = this.tempPlaylist;
+	this.playerImage.context = this.playlist;
 	
 	this.currentTrack = null;
 	this.lookingForNext = false;
@@ -53,8 +53,8 @@ function Radio() {
 	};
 	
 	self.clearPlaylist = function() {
-		while (self.tempPlaylist.length > 0) {
-			self.tempPlaylist.remove(0);
+		while (self.playlist.length > 0) {
+			self.playlist.remove(0);
 		}
 	};
 	
@@ -75,9 +75,9 @@ function Radio() {
 					console.log("PLAYING");
 					
 					sp.trackPlayer.addEventListener("playerStateChanged", self.trackChanged);
-					self.playPlaylist(self.tempPlaylist.uri);
+					self.playPlaylist(self.playlist.uri);
 					
-					self.currentTrack = self.tempPlaylist.get(0);
+					self.currentTrack = self.playlist.get(0);
 					
 					setTimeout(self.checkPlayback, 2000);
 				}
@@ -107,7 +107,7 @@ function Radio() {
 				console.log("SPOTIFY: Search results for " + params.artist + " " + params.track, result);
 				if (result.tracks.length > 0) {
 					console.log("SPOTIFY: Setting next track", result.tracks[0]);
-					self.tempPlaylist.add(result.tracks[0].uri);
+					self.playlist.add(result.tracks[0].uri);
 					
 					if (isFunction(params.onSuccess)) {
 						params.onSuccess();
@@ -154,7 +154,7 @@ function Radio() {
 		console.log("SPOTIFY: playerStateChanged", event);
 		
 		if (event.data.curtrack == true) {
-			if (sp.trackPlayer.getPlayingContext()[0] === self.tempPlaylist.uri) {
+			if (sp.trackPlayer.getPlayingContext()[0] === self.playlist.uri) {
 				self.playerImage.playing = sp.trackPlayer.getIsPlaying();
 				self.lookingForNext = false;
 			}
@@ -165,13 +165,13 @@ function Radio() {
 	};
 	
 	self.playPlaylist = function() {
-		console.log("PANDORIFY: Playing playlist " + self.tempPlaylist.uri);
+		console.log("PANDORIFY: Playing playlist " + self.playlist.uri);
 		
-		var index = self.radioPlaying ? self.tempPlaylist.length - 1 : 0;
-		sp.trackPlayer.playTrackFromContext(self.tempPlaylist.uri, index, "", {
+		var index = self.radioPlaying ? self.playlist.length - 1 : 0;
+		sp.trackPlayer.playTrackFromContext(self.playlist.uri, index, "", {
 			onSuccess: function() { 
-				sp.trackPlayer.setPlayingContextCanSkipPrev(self.tempPlaylist.uri, false);
-				sp.trackPlayer.setPlayingContextCanSkipNext(self.tempPlaylist.uri, true);
+				sp.trackPlayer.setPlayingContextCanSkipPrev(self.playlist.uri, false);
+				sp.trackPlayer.setPlayingContextCanSkipNext(self.playlist.uri, true);
 			},
 			onFailure: function () { },
 			onComplete: function () { }
@@ -179,7 +179,7 @@ function Radio() {
 	};
 	
 	self.checkPlayback = function() {
-		if (sp.trackPlayer.getPlayingContext()[0] === self.tempPlaylist.uri) {
+		if (sp.trackPlayer.getPlayingContext()[0] === self.playlist.uri) {
 			var track = sp.trackPlayer.getNowPlayingTrack();
 			if (track.position >= track.length - 5000 && !self.lookingForNext) {	//5 seconds left in the track, get the next one
 				self.lookingForNext = true;
@@ -188,5 +188,9 @@ function Radio() {
 		}
 		
 		setTimeout(self.checkPlayback, 1000);
+	};
+	
+	self.isCurrentContext = function() {
+		return player.context == self.playlist.uri;
 	};
 }
