@@ -1,4 +1,138 @@
 function Radio() {
+	var self = this;
+	
+	this.sessionId = "";
+	
+	this.playlist = sp.core.getTemporaryPlaylist("Pandorify");
+	this.playerImage = new views.Player();
+	this.playerImage.context = this.playlist;
+	
+	this.echonestQueue = null;
+	
+	self.banArtist = function() {
+		//TODO
+	};
+	
+	self.banTrack = function() {
+		//TODO
+	};
+	
+	self.clearPlaylist = function() {
+		while (self.playlist.length > 0) {
+			self.playlist.remove(0);
+		}
+	};
+	
+	self.createArtistStation = function(artist) {
+		if (artist == null) return;
+		console.log("PANDORIFY: Starting station with artist " + artist.data.name.decodeForText(), artist);
+		
+		self.startRadio({"artist": artist.data.name.decodeForText(), "type": "artist-radio"});
+	};
+	
+	self.createTrackStation = function(track) {
+		if (track == null) return;
+		console.log("PANDORIFY: Starting station with song " + track.data.artists[0].name.decodeForText() + " - " + track.data.name.decodeForText(), track);
+		
+		echonest.makeRequest("song/search", {"title": track.data.name.decodeForText(), "artist": track.data.artists[0].name.decodeForText(), "results": 1}, function(data) {
+			if (data.songs.length > 0) {
+				var id = data.songs[0].id;
+				self.startRadio({"song_id": id, "type": "song-radio"});
+			}
+		});
+	};
+	
+	self.createDescriptionStation = function(description) {
+		if (description.length == 0) return;
+		console.log("PANDORIFY: Starting station with description " + description);
+		self.startRadio({"description": description, "type": "artist-description"});
+	};
+	
+	self.startRadio = function(params) {
+		console.log("PANDORIFY: Starting radio", params);
+		self.clearPlaylist();
+		self.echonestQueue = new Array();
+		params.lookahead = 5;
+		echonest.makeRequest("playlist/dynamic", params, function(data) {
+			console.log("ECHONEST: Session ID - " + data.session_id);
+			self.sessionId = data.session_id;
+			
+			$.each(data.songs, function(index, song) {
+				self.echonestQueue.push({
+					artist: song.artist_name,
+					title: song.title,
+					echonestId: song.id,
+				});
+			});
+			
+			self.setNextTrack({onSuccess: self.playPlaylist});
+		});
+	};
+	
+	self.setNextTrack = function(params) {
+		console.log("PANDORIFY: setNextTrack", self.echonestQueue);
+	
+		if (self.echonestQueue.length == 0) {
+			return;
+		}
+		
+		var song = self.echonestQueue.splice(0, 1)[0];
+		var query = 'artist:"' + song.artist + '" track:"' + song.title + '"';
+		var search = new models.Search(query);
+		search.pageSize = 1;
+		search.searchArtists = false;
+		search.searchAlbums = false;
+		search.searchPlaylists = false;
+		search.observe(models.EVENT.CHANGE, function() {
+			console.log("search results", search);
+			if (search.tracks.length > 0) {
+				self.playlist.add(search.tracks[0].data.uri);
+				
+				if (params && isFunction(params.onSuccess))
+					params.onSuccess();
+				
+				console.log("DERP");
+				self.setNextTrack();
+			} else {
+				self.echonestQueue.splice(0, 1);
+				self.setNextTrack(params);
+				self.getNextTrack();
+			}
+		});
+		search.appendNext();
+	};
+	
+	self.getNextTrack = function(params) {
+		console.log("PANDORIFY: getNextTrack", params);
+		params.lookahead = 5;
+		echonest.makeRequest("playlist/dynamic", params, function(data) {
+			self.echonestQueue = new Array();
+			$.each(data.songs, function(index, song) {
+				self.echonestQueue.push({
+					artist: song.artist_name,
+					title: song.title,
+					echonestId: song.id,
+				});
+			});
+			
+			self.setNextTrack();
+		});
+	};
+	
+	
+	self.playPlaylist = function() {
+		console.log("PANDORIFY: Playling playlist " + self.playlist.uri);
+		
+		player.play(self.playlist.uri, self.playlist.uri, 0);
+		/*player.canChangeRepeat = false;
+		player.canChangeShuffle = false;
+		player.canPlayPrevious = false;
+		player.canPlayNext = true;*/
+	};
+	
+}
+
+function Radio2() {
 	console.log("PANDORIFY: Creating new radio");
 	var self = this;
 	
