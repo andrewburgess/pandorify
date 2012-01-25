@@ -9,6 +9,7 @@ function Radio() {
 	
 	this.echonestQueue = null;
 	this.lastEchonestId = "";
+	this.echonestPlaylist = new Array();
 	
 	//NOTE: Create "Echonest Playlist" of tracks that were actually able to be found
 	
@@ -16,8 +17,11 @@ function Radio() {
 		//TODO
 	};
 	
-	self.banTrack = function() {
-		//TODO
+	self.banTrack = function(skip) {
+		self.getNextTrack({"ban": "song"}, function() {
+			if (skip)
+				sp.trackPlayer.skipToNextTrack();
+		});
 	};
 	
 	self.clearPlaylist = function() {
@@ -88,17 +92,18 @@ function Radio() {
 		search.observe(models.EVENT.CHANGE, function() {
 			if (search.tracks.length > 0) {
 				self.playlist.add(search.tracks[0].data.uri);
+				song.uri = search.tracks[0].data.uri;
+				self.echonestPlaylist.push(song);
 				
 				if (params && isFunction(params.onSuccess))
 					params.onSuccess();
 					
 				self.setNextTrack();
 			} else {
-				console.log("No results for that song");
-				self.getNextTrack({});
+				console.log("No results for " + query);
+				if (player.index == self.playlist.length - 1)
+					self.getNextTrack({});	//Panic!
 			}
-			
-			self.getSessionInfo();
 		});
 		search.appendNext();
 	};
@@ -107,18 +112,23 @@ function Radio() {
 		console.log("PANDORIFY: getNextTrack", params);
 		params.session_id = self.sessionId;
 		params.lookahead = 2;
-		echonest.makeRequest("playlist/dynamic", params, function(data) {
-			self.echonestQueue = new Array();
-			
-			var song = data.songs[data.songs.length - 1];
-			console.log(song);
+		echonest.makeRequest("playlist/dynamic", params, function(data) {			
+			var next = data.songs[data.songs.length - 1];
 			self.echonestQueue.push({
-				artist: song.artist_name,
-				title: song.title,
-				echonestId: song.id,
+				artist: next.artist_name,
+				title: next.title,
+				echonestId: next.id,
 			});
 			
+			var current = data.songs[0];
+			if (current.id != self.echonestPlaylist[player.index].echonestId) {
+				console.log("Ban track " + current.artist_name + " - " + current.title, current);	//This song wasn't found in spotify, and so is not in our queue
+				self.banTrack(false);
+			}
+			
 			self.setNextTrack({ onSuccess: function() { if (!player.playing) self.playPlaylist(self.playlist.length - 1); } });
+			
+			//self.getSessionInfo();
 		});
 	};
 	

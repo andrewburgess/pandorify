@@ -54,6 +54,13 @@ function Pandorify() {
 		application.observe(models.EVENT.ACTIVATE, self.handleActivate);
 		self.loadEchonestTerms();
 		self.populateEmptyResults();
+		
+		if (player.playing && self.radio.isCurrentContext()) {
+			window.location = "spotify:app:pandorify:radio";
+			self.handleArgsChanged();	//NOTE: Seems I have to manually call this?
+			
+			self.setCurrentTrackData();
+		}
 	};
 	
 	//Spaces out executing a search based on keypresses
@@ -193,7 +200,7 @@ function Pandorify() {
 			}
 		});
 		
-		$(".track-result").click(function() {
+		$(".song-result").click(function() {
 			self.startStation("track", $(this).attr("data-uri"));
 		});
 	};
@@ -290,7 +297,7 @@ function Pandorify() {
 					self.radio.createTrackStation(track);
 					
 					el.radioTitle.empty().append("based on ").append(getLinkedTrack(track)).append(" by ");
-					el.radioTitle.append(getArtistNameLinkList(track.artists));
+					getArtistNameLinkList(el.radioTitle, track.artists);
 				});
 				break;
 		}
@@ -314,7 +321,7 @@ function Pandorify() {
 		el.artistImage.empty().append(self.radio.playerImage.node);
 		
 		el.trackName.empty().append(getLinkedTrack(track));
-		el.artistName.empty().append(getArtistNameLinkList(track.artists));
+		getArtistNameLinkList(el.artistName.empty(), track.artists);
 	};
 };
 

@@ -28,14 +28,13 @@ function getArtistNameList(artists) {
 	return a;
 }
 
-function getArtistNameLinkList(artists) {
-	var div = $("<div></div>");
-	div.append("<a></a>").attr("href", artists[0].uri).text(artists[0].name.decodeForText());
+function getArtistNameLinkList(container, artists) {
+	container.append($("<a></a>").attr("href", artists[0].uri).text(artists[0].name.decodeForText()));
 	for (var i = 1; i < artists.length; i++) {
-		div.append(", ");
-		div.append("<a></a>").attr("href", artists[i].uri).text(artists[i].name.decodeForText());
+		container.append(", ");
+		container.append("<a></a>").attr("href", artists[i].uri).text(artists[i].name.decodeForText());
 	}
-	return div;
+	return container;
 }
 
 function getLinkedArtist(artist) {
