@@ -41,7 +41,7 @@ function Pandorify() {
 	this.radio = new Radio();
 	
 	// Gets the application to an initial state where good stuff can happen
-	this.initialize = function() {	
+	this.initialize = function() {
 		el.radio.hide();
 	
 		el.searchInput.val("");
@@ -50,8 +50,8 @@ function Pandorify() {
 		el.sessionDialog.dialog({autoOpen: false, maxWidth: Math.round(el.document.width() * 0.8), maxHeight: Math.round(el.document.height() * 0.9)});
 		el.sessionInfoButton.click(function() { el.sessionDialog.dialog("open"); });
 		
-		//application.observe(models.EVENT.ARGUMENTSCHANGED, self.handleArgsChanged);
-		sp.core.addEventListener("argumentsChanged", self.handleArgsChanged);
+		application.observe(models.EVENT.ARGUMENTSCHANGED, self.handleArgsChanged);
+		application.observe(models.EVENT.ACTIVATE, self.handleActivate);
 		self.loadEchonestTerms();
 		self.populateEmptyResults();
 	};
@@ -71,8 +71,16 @@ function Pandorify() {
 		}
 	};
 	
-	this.handleArgsChanged = function() {
-		console.log(application);
+	this.handleActivate = function() {
+		if (player.playing && self.radio.isCurrentContext()) {
+			window.location = "spotify:app:pandorify:radio";
+			self.handleArgsChanged();	//NOTE: Seems I have to manually call this?
+			
+			self.setCurrentTrackData();
+		}
+	};
+	
+	this.handleArgsChanged = function() {		
 		switch(application.arguments[0]) {
 			case "create":
 				el.searchInput.val("");
@@ -214,12 +222,7 @@ function Pandorify() {
 			
 			if (search.tracks.length) {
 				self.processTrackSearch(search.tracks);
-			}
-			
-			$(".artist-result").click(function() {
-				self.startStation("artist", $(this).attr("data-uri"));
-			});
-			
+			}			
 		});
 		search.appendNext();
 		
@@ -299,15 +302,19 @@ function Pandorify() {
 	
 	this.trackChanged = function(event) {
 		if (self.radio.isCurrentContext() && event.data.curtrack) {
-			var track = player.track.data;
-			
-			$(self.radio.playerImage.image).empty();
-			$(self.radio.playerImage.image).append(getAlbumArt(track).node);
-			el.artistImage.empty().append(self.radio.playerImage.node);
-			
-			el.trackName.empty().append(getLinkedTrack(track));
-			el.artistName.empty().append(getArtistNameLinkList(track.artists));
+			self.setCurrentTrackData();
 		}
+	};
+	
+	this.setCurrentTrackData = function() {
+		var track = player.track.data;
+			
+		$(self.radio.playerImage.image).empty();
+		$(self.radio.playerImage.image).append(getAlbumArt(track).node);
+		el.artistImage.empty().append(self.radio.playerImage.node);
+		
+		el.trackName.empty().append(getLinkedTrack(track));
+		el.artistName.empty().append(getArtistNameLinkList(track.artists));
 	};
 };
 

@@ -8,6 +8,9 @@ function Radio() {
 	this.playerImage.context = this.playlist;
 	
 	this.echonestQueue = null;
+	this.lastEchonestId = "";
+	
+	//NOTE: Create "Echonest Playlist" of tracks that were actually able to be found
 	
 	self.banArtist = function() {
 		//TODO
@@ -52,7 +55,7 @@ function Radio() {
 		console.log("PANDORIFY: Starting radio", params);
 		self.clearPlaylist();
 		self.echonestQueue = new Array();
-		params.lookahead = 5;
+		params.lookahead = 2;
 		echonest.makeRequest("playlist/dynamic", params, function(data) {
 			console.log("ECHONEST: Session ID - " + data.session_id);
 			self.sessionId = data.session_id;
@@ -65,13 +68,12 @@ function Radio() {
 				});
 			});
 			
+			player.observe(models.EVENT.CHANGE, self.trackChanged);
 			self.setNextTrack({onSuccess: self.playPlaylist});
 		});
 	};
 	
 	self.setNextTrack = function(params) {
-		console.log("PANDORIFY: setNextTrack", self.echonestQueue);
-	
 		if (self.echonestQueue.length == 0) {
 			return;
 		}
@@ -84,52 +86,87 @@ function Radio() {
 		search.searchAlbums = false;
 		search.searchPlaylists = false;
 		search.observe(models.EVENT.CHANGE, function() {
-			console.log("search results", search);
 			if (search.tracks.length > 0) {
 				self.playlist.add(search.tracks[0].data.uri);
 				
 				if (params && isFunction(params.onSuccess))
 					params.onSuccess();
-				
-				console.log("DERP");
+					
 				self.setNextTrack();
 			} else {
-				self.echonestQueue.splice(0, 1);
-				self.setNextTrack(params);
-				self.getNextTrack();
+				console.log("No results for that song");
+				self.getNextTrack({});
 			}
+			
+			self.getSessionInfo();
 		});
 		search.appendNext();
 	};
 	
 	self.getNextTrack = function(params) {
 		console.log("PANDORIFY: getNextTrack", params);
-		params.lookahead = 5;
+		params.session_id = self.sessionId;
+		params.lookahead = 2;
 		echonest.makeRequest("playlist/dynamic", params, function(data) {
 			self.echonestQueue = new Array();
-			$.each(data.songs, function(index, song) {
-				self.echonestQueue.push({
-					artist: song.artist_name,
-					title: song.title,
-					echonestId: song.id,
-				});
+			
+			var song = data.songs[data.songs.length - 1];
+			console.log(song);
+			self.echonestQueue.push({
+				artist: song.artist_name,
+				title: song.title,
+				echonestId: song.id,
 			});
 			
-			self.setNextTrack();
+			self.setNextTrack({ onSuccess: function() { if (!player.playing) self.playPlaylist(self.playlist.length - 1); } });
 		});
 	};
 	
+	self.trackChanged = function(event) {		
+		if (event.data.curtrack == true) {
+			if (self.isCurrentContext()) {
+				if (player.index != 0)
+					self.getNextTrack({});
+			}
+		}
+	};	
 	
-	self.playPlaylist = function() {
+	self.playPlaylist = function(index) {
 		console.log("PANDORIFY: Playling playlist " + self.playlist.uri);
 		
-		player.play(self.playlist.uri, self.playlist.uri, 0);
+		if (index)
+			player.play(self.playlist.uri, self.playlist.uri, index);
+		else
+			player.play(self.playlist.uri, self.playlist.uri, 0);
 		/*player.canChangeRepeat = false;
 		player.canChangeShuffle = false;
 		player.canPlayPrevious = false;
 		player.canPlayNext = true;*/
 	};
 	
+	self.getSessionInfo = function() {
+		echonest.makeRequest("playlist/session_info", {"session_id": self.sessionId}, function(data) {
+			self.processSessionInfo(data);
+		});
+	};
+	
+	self.processSessionInfo = function(data) {
+		el.sessionTerms.empty();
+		$.each(data.terms, function(index, term) {
+			var next = $("<div></div>").addClass("session-term");
+			var width = Math.round(term.frequency * 100);
+			var divAmount = $("<div></div>").addClass("session-amount").css("width", width + "%");
+			next.append($("<div></div>").addClass("session-description").text(term.name));
+			next.append(divAmount);
+			el.sessionTerms.append(next);			
+		});
+		
+		el.sessionDialog.css("max-height", Math.round($(document).height() * 0.9));
+	}
+	
+	self.isCurrentContext = function() {
+		return player.context == self.playlist.uri;
+	};
 }
 
 function Radio2() {
@@ -324,7 +361,5 @@ function Radio2() {
 		setTimeout(self.checkPlayback, 1000);
 	};
 	
-	self.isCurrentContext = function() {
-		return player.context == self.playlist.uri;
-	};
+	
 }
