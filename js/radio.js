@@ -8,22 +8,24 @@ function Radio() {
 	this.playerImage.context = this.playlist;
 	
 	this.echonestQueue = null;
-	this.lastEchonestId = "";
-	this.echonestPlaylist = new Array();
+	this.echonestPlaylist = null;
+	this.echonestIndex = -1;
 	
-	this.getNextTrack = true;
+	this.lookupTrack = true;
 	
 	//NOTE: Create "Echonest Playlist" of tracks that were actually able to be found
 	
 	self.banArtist = function() {
-		self.getNextTrack = false;
+		self.lookupTrack = false;
 		player.next();
 		self.getNextTrack({"ban": "artist"});
 	};
 	
 	self.banTrack = function(skip) {
-		self.getNextTrack = false;
-		if (skip) player.next();
+		if (skip) {
+			self.lookupTrack = false;
+			player.next();
+		}
 		self.getNextTrack({"ban": "song"});
 	};
 	
@@ -62,9 +64,11 @@ function Radio() {
 		console.log("PANDORIFY: Starting radio", params);
 		self.clearPlaylist();
 		self.echonestQueue = new Array();
-		params.lookahead = 2;
+		self.echonestPlaylist = new Array();
+		params.lookahead = 5;
 		echonest.makeRequest("playlist/dynamic", params, function(data) {
 			console.log("ECHONEST: Session ID - " + data.session_id);
+			self.lookahead = 2;
 			self.sessionId = data.session_id;
 			
 			$.each(data.songs, function(index, song) {
@@ -81,7 +85,12 @@ function Radio() {
 	};
 	
 	self.setNextTrack = function(params) {
+		console.log("PANDORIFY: setNextTrack", params);
 		if (self.echonestQueue.length == 0) {
+			if (isFunction(params.onSuccess)) {
+				params.onSuccess();
+				params.onSuccess = null;
+			}
 			return;
 		}
 		
@@ -93,21 +102,15 @@ function Radio() {
 		search.searchAlbums = false;
 		search.searchPlaylists = false;
 		search.observe(models.EVENT.CHANGE, function() {
+			self.echonestPlaylist.push(song);
 			if (search.tracks.length > 0) {
 				self.playlist.add(search.tracks[0].data.uri);
 				song.uri = search.tracks[0].data.uri;
-				self.echonestPlaylist.push(song);
-				
-				if (isFunction(params.onSuccess))
-					params.onSuccess();
-					
-				self.setNextTrack({});
 			} else {
 				console.log("No results for " + query);
-				if (self.playlist.length == 0 || player.index == self.playlist.length - 1) {
-					self.getNextTrack({}, params);	//Panic!
-				}
 			}
+			
+			self.setNextTrack(params);
 		});
 		search.appendNext();
 	};
@@ -115,37 +118,79 @@ function Radio() {
 	self.getNextTrack = function(params, extra) {
 		console.log("PANDORIFY: getNextTrack", params);
 		params.session_id = self.sessionId;
-		params.lookahead = 2;
-		echonest.makeRequest("playlist/dynamic", params, function(data) {			
-			var next = data.songs[data.songs.length - 1];
-			self.echonestQueue.push({
-				artist: next.artist_name,
-				title: next.title,
-				echonestId: next.id,
+		if (!params.lookahead) {
+			if (player.index >= self.playlist.length - 5)
+				params.lookahead = Math.min(5, (5 - (self.playlist.length - player.index)) + 1);
+			else
+				params.lookahead = 2;
+		}
+		echonest.makeRequest("playlist/dynamic", params, function(data) {	
+			var ban = false;
+			$.each(data.songs, function(index, song) {
+				if (index == 0) {
+					//Should be the currently playing song
+					if (song.id == self.echonestPlaylist[self.echonestIndex].echonestId) {
+						if (self.echonestPlaylist[self.echonestIndex].uri)
+							console.log("Playing correct song: " + song.artist_name + " - " + song.title);
+						else
+							ban = true;
+					} else {
+						console.warn("Mismatched song. Expected: " + song.artist_name + " - " + song.title);
+						if (self.echonestPlaylist[self.echonestIndex].uri) {
+							//Song exists in spotify, we need to find it
+							console.warn("Exists in Spotify, something screwed up");
+							for (var i in self.echonestPlaylist) {
+								if (self.echonestPlaylist[i].echonestId == song.id) {
+									console.log("Resetting index at " + i);
+									self.echonestIndex = i;
+								}
+							}
+						} else {
+							ban = true;
+						}
+					}
+				} else {
+					if (self.echonestIndex + index < self.echonestPlaylist.length && song.id == self.echonestPlaylist[self.echonestIndex + index].echonestId) {
+						console.log("Track already present in playlist " + song.artist_name + " - " + song.title);
+					} else {
+						console.log("Track  didn't exist at " + (self.echonestIndex + index));
+						console.log("Storing track to playlist " + song.artist_name + " - " + song.title);
+						self.echonestQueue.push({
+							artist: song.artist_name,
+							title: song.title,
+							echonestId: song.id
+						});
+					}
+				}
 			});
 			
 			var current = data.songs[0];
-			if (self.echonestPlaylist.length > 0 || 
-				(player.index && current.id != self.echonestPlaylist[player.index].echonestId)) {
+			if (ban) {
 				console.log("Ban track " + current.artist_name + " - " + current.title, current);	//This song wasn't found in spotify, and so is not in our queue
+				self.echonestIndex++;
 				self.banTrack(false);
 			}
 			
-			self.setNextTrack(extra);
+			self.setNextTrack(extra ? extra : {});
 			
 			//self.getSessionInfo();
 		});
 	};
 	
-	self.trackChanged = function(event) {		
+	self.trackChanged = function(event) {
 		if (event.data.curtrack == true) {
 			if (self.isCurrentContext()) {
-				if (player.index != 0 && self.getNextTrack)
+				self.echonestIndex++;
+				
+				if (player.index != 0 && self.lookupTrack) {
 					self.getNextTrack({});
+				} else {
+					console.log("NOT GETTING IT");
+				}
 			}
 		}
 		
-		self.getNextTrack = true;
+		self.lookupTrack = true;
 	};	
 	
 	self.playPlaylist = function(index) {
@@ -186,197 +231,3 @@ function Radio() {
 	};
 }
 
-function Radio2() {
-	console.log("PANDORIFY: Creating new radio");
-	var self = this;
-	
-	this.sessionId = "";
-	
-	this.playlist = sp.core.getTemporaryPlaylist("Pandorify Temp " + (new Date()).toISOString());
-	this.playerImage = new views.Player();
-	this.playerImage.context = this.playlist;
-	
-	this.currentTrack = null;
-	this.lookingForNext = false;
-	
-	this.nextOptions = {}
-	
-	self.banArtist = function() {
-		self.getNextTrack({"ban": "artist"}, function() {
-			self.currentTrack = null; 
-			sp.trackPlayer.skipToNextTrack(); 
-		});
-	};
-	
-	self.banTrack = function() {
-		self.getNextTrack({"ban": "song"}, function() {
-			self.currentTrack = null;
-			sp.trackPlayer.skipToNextTrack();
-		});
-	};
-	
-	self.createArtistStation = function(artist) {
-		if (artist == null) return;
-		console.log("PANDORIFY: Starting station with artist " + artist.data.name.decodeForText(), artist);
-		
-		self.startRadio({"artist": artist.data.name.decodeForText(), "type": "artist-radio"});
-	};
-	
-	self.createTrackStation = function(track) {
-		if (track == null) return;
-		console.log("PANDORIFY: Starting station with song " + track.data.artists[0].name.decodeForText() + " - " + track.data.name.decodeForText(), track);
-		
-		echonest.makeRequest("song/search", {"title": track.data.name.decodeForText(), "artist": track.data.artists[0].name.decodeForText(), "results": 1}, function(data) {
-			if (data.songs.length > 0) {
-				var id = data.songs[0].id;
-				self.startRadio({"song_id": id, "type": "song-radio"});
-			}
-		});
-	};
-	
-	self.createDescriptionStation = function(description) {
-		if (description.length == 0) return;
-		console.log("PANDORIFY: Starting station with description " + description);
-		self.startRadio({"description": description, "type": "artist-description"});
-	};
-	
-	self.clearPlaylist = function() {
-		while (self.playlist.length > 0) {
-			self.playlist.remove(0);
-		}
-	};
-	
-	self.startRadio = function(params) {
-		console.log("PANDORIFY: Starting radio", params);
-		self.clearPlaylist();
-		echonest.makeRequest("playlist/dynamic", params, function(data) {
-			console.log("ECHONEST: Session ID - " + data.session_id);
-			self.sessionId = data.session_id;
-			
-			self.setNextTrack({
-				"artist": data.songs[0].artist_name,
-				"track": data.songs[0].title,
-				"onError": function() {
-					self.startRadio(params);	//Attempt to try again
-				},
-				"onSuccess": function() {
-					console.log("PLAYING");
-					
-					sp.trackPlayer.addEventListener("playerStateChanged", self.trackChanged);
-					self.playPlaylist(self.playlist.uri);
-					
-					self.currentTrack = self.playlist.get(0);
-					
-					setTimeout(self.checkPlayback, 2000);
-				}
-			});
-		});
-	};
-	
-	self.getNextTrack = function(params, onSuccess) {
-		console.log("PANDORIFY: getNextTrack", params);
-		params.session_id = self.sessionId;
-		echonest.makeRequest("playlist/dynamic", params, function(data) {
-			self.setNextTrack({
-				"artist": data.songs[0].artist_name,
-				"track": data.songs[0].title,
-				"onError": function() {
-					self.getNextTrack(params);
-				},
-				"onSuccess": onSuccess
-			});
-		});
-	};
-	
-	self.setNextTrack = function(params) {
-		console.log("PANDORIFY: setNextTrack", params);
-		sp.core.search(params.artist + " " + params.track, true, true, {
-			onSuccess: function(result) {
-				console.log("SPOTIFY: Search results for " + params.artist + " " + params.track, result);
-				if (result.tracks.length > 0) {
-					console.log("SPOTIFY: Setting next track", result.tracks[0]);
-					self.playlist.add(result.tracks[0].uri);
-					
-					if (isFunction(params.onSuccess)) {
-						params.onSuccess();
-					}
-					
-					self.getSessionInfo();
-				} else {
-					console.warn("SPOTIFY: No results found");
-					if (isFunction(params.onError)) {
-						params.onError();
-					}
-				}
-			},
-			onFailure: function() {
-				console.error("SPOTIFY: Search failed for " + params.artist + " " + params.track);
-				if (isFunction(params.onError))
-					params.onError();
-			}
-		});
-	};
-	
-	self.getSessionInfo = function() {
-		echonest.makeRequest("playlist/session_info", {"session_id": self.sessionId}, function(data) {
-			self.processSessionInfo(data);
-		});
-	};
-	
-	self.processSessionInfo = function(data) {
-		el.sessionTerms.empty();
-		$.each(data.terms, function(index, term) {
-			var next = $("<div></div>").addClass("session-term");
-			var width = Math.round(term.frequency * 100);
-			var divAmount = $("<div></div>").addClass("session-amount").css("width", width + "%");
-			next.append($("<div></div>").addClass("session-description").text(term.name));
-			next.append(divAmount);
-			el.sessionTerms.append(next);			
-		});
-		
-		el.sessionDialog.css("max-height", Math.round($(document).height() * 0.9));
-		el.sessionDialog.css("max-width", Math.round($(document).width() * 0.5));
-	};
-	
-	self.trackChanged = function(event) {
-		console.log("SPOTIFY: playerStateChanged", event);
-		
-		if (event.data.curtrack == true) {
-			if (sp.trackPlayer.getPlayingContext()[0] === self.playlist.uri) {
-				self.playerImage.playing = sp.trackPlayer.getIsPlaying();
-				self.getNextTrack = false;
-			}
-			else if (player.playing == false) {
-				self.getNextTrack({}, {onSuccess: self.playPlaylist});
-			}
-		}
-	};
-	
-	self.playPlaylist = function() {
-		console.log("PANDORIFY: Playing playlist " + self.playlist.uri);
-		
-		var index = self.radioPlaying ? self.playlist.length - 1 : 0;
-		sp.trackPlayer.playTrackFromContext(self.playlist.uri, index, "", {
-			onSuccess: function() { 
-				sp.trackPlayer.setPlayingContextCanSkipPrev(self.playlist.uri, false);
-				sp.trackPlayer.setPlayingContextCanSkipNext(self.playlist.uri, true);
-			},
-			onFailure: function () { },
-			onComplete: function () { }
-		});
-	};
-	
-	self.checkPlayback = function() {
-		if (sp.trackPlayer.getPlayingContext()[0] === self.playlist.uri) {
-			var track = sp.trackPlayer.getNowPlayingTrack();
-			if (track.position >= track.length - 5000 && !self.lookingForNext) {	//5 seconds left in the track, get the next one
-				self.lookingForNext = true;
-				self.getNextTrack({});
-			}
-		}
-		
-		setTimeout(self.checkPlayback, 1000);
-	};
-	
-	
-}
