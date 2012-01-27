@@ -61,6 +61,9 @@ function Pandorify() {
 			
 			self.setCurrentTrackData();
 		}
+		
+		el.banArtist.click(function() { self.radio.banArtist(); });
+		el.banTrack.click(function() { self.radio.banTrack(true); });
 	};
 	
 	//Spaces out executing a search based on keypresses

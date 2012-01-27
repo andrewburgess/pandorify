@@ -3,7 +3,7 @@ function Radio() {
 	
 	this.sessionId = "";
 	
-	this.playlist = sp.core.getTemporaryPlaylist("Pandorify");
+	this.playlist = sp.core.getTemporaryPlaylist("Pandorify " + (new Date()).toISOString());
 	this.playerImage = new views.Player();
 	this.playerImage.context = this.playlist;
 	
@@ -11,17 +11,20 @@ function Radio() {
 	this.lastEchonestId = "";
 	this.echonestPlaylist = new Array();
 	
+	this.getNextTrack = true;
+	
 	//NOTE: Create "Echonest Playlist" of tracks that were actually able to be found
 	
 	self.banArtist = function() {
-		//TODO
+		self.getNextTrack = false;
+		player.next();
+		self.getNextTrack({"ban": "artist"});
 	};
 	
 	self.banTrack = function(skip) {
-		self.getNextTrack({"ban": "song"}, function() {
-			if (skip)
-				sp.trackPlayer.skipToNextTrack();
-		});
+		self.getNextTrack = false;
+		if (skip) player.next();
+		self.getNextTrack({"ban": "song"});
 	};
 	
 	self.clearPlaylist = function() {
@@ -95,20 +98,21 @@ function Radio() {
 				song.uri = search.tracks[0].data.uri;
 				self.echonestPlaylist.push(song);
 				
-				if (params && isFunction(params.onSuccess))
+				if (isFunction(params.onSuccess))
 					params.onSuccess();
 					
-				self.setNextTrack();
+				self.setNextTrack({});
 			} else {
 				console.log("No results for " + query);
-				if (player.index == self.playlist.length - 1)
-					self.getNextTrack({});	//Panic!
+				if (self.playlist.length == 0 || player.index == self.playlist.length - 1) {
+					self.getNextTrack({}, params);	//Panic!
+				}
 			}
 		});
 		search.appendNext();
 	};
 	
-	self.getNextTrack = function(params) {
+	self.getNextTrack = function(params, extra) {
 		console.log("PANDORIFY: getNextTrack", params);
 		params.session_id = self.sessionId;
 		params.lookahead = 2;
@@ -121,12 +125,13 @@ function Radio() {
 			});
 			
 			var current = data.songs[0];
-			if (current.id != self.echonestPlaylist[player.index].echonestId) {
+			if (self.echonestPlaylist.length > 0 || 
+				(player.index && current.id != self.echonestPlaylist[player.index].echonestId)) {
 				console.log("Ban track " + current.artist_name + " - " + current.title, current);	//This song wasn't found in spotify, and so is not in our queue
 				self.banTrack(false);
 			}
 			
-			self.setNextTrack({ onSuccess: function() { if (!player.playing) self.playPlaylist(self.playlist.length - 1); } });
+			self.setNextTrack(extra);
 			
 			//self.getSessionInfo();
 		});
@@ -135,10 +140,12 @@ function Radio() {
 	self.trackChanged = function(event) {		
 		if (event.data.curtrack == true) {
 			if (self.isCurrentContext()) {
-				if (player.index != 0)
+				if (player.index != 0 && self.getNextTrack)
 					self.getNextTrack({});
 			}
 		}
+		
+		self.getNextTrack = true;
 	};	
 	
 	self.playPlaylist = function(index) {
@@ -337,10 +344,10 @@ function Radio2() {
 		if (event.data.curtrack == true) {
 			if (sp.trackPlayer.getPlayingContext()[0] === self.playlist.uri) {
 				self.playerImage.playing = sp.trackPlayer.getIsPlaying();
-				self.lookingForNext = false;
+				self.getNextTrack = false;
 			}
-			else if (sp.trackPlayer.getIsPlaying() == false) {
-				self.getNextTrack({}, self.playPlaylist);
+			else if (player.playing == false) {
+				self.getNextTrack({}, {onSuccess: self.playPlaylist});
 			}
 		}
 	};
