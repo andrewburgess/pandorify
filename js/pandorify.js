@@ -218,7 +218,7 @@ function Pandorify() {
 			return;
 		}
 	
-		var search = new models.Search(query);
+		var search = new models.Search("*" + query + "*");
 		search.localResults = models.LOCALSEARCHRESULTS.APPEND;
 		search.pageSize = 10;
 		search.searchAlbums = false;

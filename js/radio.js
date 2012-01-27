@@ -187,8 +187,6 @@ function Radio() {
 				
 				if (player.index != 0 && self.lookupTrack) {
 					self.getNextTrack({});
-				} else {
-					console.log("NOT GETTING IT");
 				}
 			}
 		}
