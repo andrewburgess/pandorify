@@ -261,12 +261,13 @@ function Pandorify() {
 		sp.social.getToplist("artist", "user", username, {
 			onSuccess: function(results) {
 				self.processArtistSearch(results.artists);
-			}
-		});
-		
-		sp.social.getToplist("track", "user", username, {
-			onSuccess: function(results) {
-				self.processTrackSearch(results.tracks);
+			},
+			onComplete:function() {
+				sp.social.getToplist("track", "user", username, {
+					onSuccess: function(results) {
+						self.processTrackSearch(results.tracks);
+					}
+				});
 			}
 		});
 		
@@ -321,7 +322,7 @@ function Pandorify() {
 			
 		$(self.radio.playerImage.image).empty();
 		$(self.radio.playerImage.image).append(getAlbumArt(track).node);
-		el.artistImage.empty().append(self.radio.playerImage.node);
+		el.artistImage.empty().append($("<a></a>").attr("href", track.album.uri).append(self.radio.playerImage.node));
 		
 		el.trackName.empty().append(getLinkedTrack(track));
 		getArtistNameLinkList(el.artistName.empty(), track.artists);

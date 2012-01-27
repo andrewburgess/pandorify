@@ -42,7 +42,7 @@ function getLinkedArtist(artist) {
 }
 
 function getLinkedTrack(track) {
-	return $("<a></a>").attr("href", track.album.uri).text(track.name.decodeForText());
+	return $("<a></a>").attr("href", track.uri).text(track.name.decodeForText());
 }
 
 function getAlbumArt(track) {

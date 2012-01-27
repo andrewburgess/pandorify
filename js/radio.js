@@ -4,6 +4,9 @@ function Radio() {
 	this.sessionId = "";
 	
 	this.playlist = sp.core.getTemporaryPlaylist("Pandorify " + (new Date()).toISOString());
+	sp.trackPlayer.setContextCanSkipPrev(this.playlist.uri, false);
+	sp.trackPlayer.setContextCanRepeat(this.playlist.uri, false);
+	sp.trackPlayer.setContextCanShuffle(this.playlist.uri, false);
 	this.playerImage = new views.Player();
 	this.playerImage.context = this.playlist;
 	
