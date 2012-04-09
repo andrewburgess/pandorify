@@ -7,11 +7,15 @@ function Radio() {
     this.playerImage = new views.Player();
     this.playerImage.context = this.playlist;
     
+    self.playlist.observe(models.EVENT.LOAD, function() {
+        console.log("Playlist loaded?!");
+    });
+    
     this.lookupTrack = true;
     
     //NOTE: Create "Echonest Playlist" of tracks that were actually able to be found
     
-    self.banArtist = function() {
+    /*self.banArtist = function() {
         player.next();
         self.getNextTrack({"ban": "artist"});
     };
@@ -19,7 +23,7 @@ function Radio() {
     self.banTrack = function() {
         player.next();
         self.getNextTrack({"ban": "song"});
-    };
+    };*/
     
     self.clearPlaylist = function() {
         while (self.playlist.length > 0) {
@@ -55,52 +59,53 @@ function Radio() {
     self.startRadio = function(params) {
         console.log("PANDORIFY: Starting radio", params);
         self.clearPlaylist();
-        params.lookahead = 2;
         params.bucket = ['id:spotify-WW', 'tracks'];
         params.limit = 'true';
-        echonest.makeRequest("playlist/dynamic", params, function(data) {
+        params.session_id = '24cd0a24b71c41b8bb060e65c01a3ae9';
+        echonest.makeRequest("playlist/dynamic/restart", params, function(data) {
             console.log("ECHONEST: Session ID - " + data.session_id);
             self.sessionId = data.session_id;
             
             player.observe(models.EVENT.CHANGE, self.trackChanged);
-            self.setNextTrack({tracks: data.songs, startPlayback: true});
+            self.getNextTrack({});
         });
     };
     
     self.setNextTrack = function(params) {
         console.log("PANDORIFY: setNextTrack", params);
         
-        if (params.startPlayback) {
-            //setTimeout(self.playPlaylist, 1000);
-            
-            self.playlist.observe(models.EVENT.ITEMS_ADDED, function() {
-                console.log("Some items were added!");
-                
-                self.playPlaylist();
-                self.playlist.ignore();
-            });
-        }
-        
         if (params.tracks) {
             for (var i = 0; i < params.tracks.length; i++) {
                 console.log("Adding track: " + params.tracks[i].artist_name + " - " + params.tracks[i].title, params.tracks[i]);
-                self.playlist.add(params.tracks[i].tracks[0].foreign_id.sp());
+                if (player.track == null || player.track.uri !== params.tracks[i].tracks[0].foreign_id.sp())
+                    self.playlist.add(params.tracks[i].tracks[0].foreign_id.sp());
             }
         }
         
+        if (!isRadioPlaying()) {
+            self.playPlaylist();
+        }
+        
+        if (params.lookahead) {
+            for (var i = 0; i < params.lookahead.length; i++) {
+                console.log("Adding track: " + params.lookahead[i].artist_name + " - " + params.lookahead[i].title, params.lookahead[i]);
+                self.playlist.add(params.lookahead[i].tracks[0].foreign_id.sp());
+            }
+        }
     };
     
     self.getNextTrack = function(params, extra) {
         console.log("PANDORIFY: getNextTrack", params);
         params.session_id = self.sessionId;
         params.lookahead = 2;
-        echonest.makeRequest("playlist/dynamic", params, function(data) {    
+        params.results = 1;
+        echonest.makeRequest("playlist/dynamic/next", params, function(data) {    
             //Make sure that the current track is right
-            if (sp.trackPlayer.getNowPlayingTrack().track.uri !== data.songs[0].tracks[0].foreign_id.replace('spotify-WW', 'spotify')) {
+            if (isRadioPlaying() && player.track.uri !== data.songs[0].tracks[0].foreign_id.sp()) {
                 console.error("Track is unexpected!")
             }
             
-            self.setNextTrack({tracks: data.songs.slice(2)});
+            self.setNextTrack({tracks: data.songs, lookahead: data.lookahead});
             
             //self.getSessionInfo();
         });
@@ -108,10 +113,9 @@ function Radio() {
     
     self.trackChanged = function(event) {
         if (event.data.curtrack == true) {
-            if (self.isCurrentContext()) {
-                self.echonestIndex++;
-                
-                if (player.index != 0 && self.lookupTrack) {
+            if (self.isCurrentContext()) {                
+                if (player.index != 0) {
+                    console.log(player.index);
                     self.getNextTrack({});
                 }
             }
@@ -126,8 +130,8 @@ function Radio() {
         sp.trackPlayer.setContextCanSkipPrev(self.playlist.uri, false);
         sp.trackPlayer.setContextCanRepeat(self.playlist.uri, false);
         sp.trackPlayer.setContextCanShuffle(self.playlist.uri, false);
-
-        player.play(self.playlist.uri, self.playlist.uri, 0);
+        
+        player.play(self.playlist.get(0).uri, self.playlist.uri, 0);
     };
     
     self.getSessionInfo = function() {

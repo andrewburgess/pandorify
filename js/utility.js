@@ -16,7 +16,7 @@ function isFunction(obj) {
 }
 
 function isRadioPlaying() {
-	return (sp.trackPlayer.getPlayingContext()[0] === radio.playlist.uri && sp.trackPlayer.getNowPlayingTrack());
+	return (player.context && player.context === pandorify.radio.playlist.uri && player.track);
 }
 
 function getArtistNameList(artists) {
