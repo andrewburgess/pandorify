@@ -63,29 +63,30 @@ function Radio() {
             self.sessionId = data.session_id;
             
             player.observe(models.EVENT.CHANGE, self.trackChanged);
-            self.setNextTrack({tracks: data.songs, onSuccess: self.playPlaylist});
+            self.setNextTrack({tracks: data.songs, startPlayback: true});
         });
     };
     
     self.setNextTrack = function(params) {
         console.log("PANDORIFY: setNextTrack", params);
         
-        if (params.tracks) {
-            var i = 0;
-            if (isFunction(params.onSuccess)) {
-                console.log("Adding track: " + params.tracks[0].artist_name + " - " + params.tracks[0].title, params.tracks[0]);
-                self.playlist.add(params.tracks[0].tracks[0].foreign_id.replace('spotify-WW', 'spotify'));
-                params.onSuccess();
+        if (params.startPlayback) {
+            //setTimeout(self.playPlaylist, 1000);
+            
+            self.playlist.observe(models.EVENT.ITEMS_ADDED, function() {
+                console.log("Some items were added!");
                 
-                i = 1;
-            }
-        
-            for (i; i < params.tracks.length; i++) {
-                console.log("Adding track: " + params.tracks[i].artist_name + " - " + params.tracks[i].title, params.tracks[i]);
-                self.playlist.add(params.tracks[i].tracks[0].foreign_id.replace('spotify-WW', 'spotify'));
-            }
+                self.playPlaylist();
+                self.playlist.ignore();
+            });
         }
         
+        if (params.tracks) {
+            for (var i = 0; i < params.tracks.length; i++) {
+                console.log("Adding track: " + params.tracks[i].artist_name + " - " + params.tracks[i].title, params.tracks[i]);
+                self.playlist.add(params.tracks[i].tracks[0].foreign_id.sp());
+            }
+        }
         
     };
     
@@ -119,7 +120,7 @@ function Radio() {
         self.lookupTrack = true;
     };    
     
-    self.playPlaylist = function(index) {
+    self.playPlaylist = function() {
         console.log("PANDORIFY: Playling playlist " + self.playlist.uri);
         
         sp.trackPlayer.setContextCanSkipPrev(self.playlist.uri, false);

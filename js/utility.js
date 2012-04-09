@@ -52,3 +52,7 @@ function getAlbumArt(track) {
 function getArtistPortrait(artist) {
 	return new ui.SPImage(artist.portrait.length > 0 ? artist.portrait : "sp://import/img/placeholders/64-artist.png");
 }
+
+String.prototype.sp=function() {
+    return this.replace('spotify-WW', 'spotify');
+}
