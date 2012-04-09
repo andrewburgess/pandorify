@@ -6,13 +6,15 @@ var echonestKey = "HRKVFLJESXBJLUDBQ";
 
 function makeRequest(method, args, callback) {
 	args.api_key = echonestKey;
-	args.format = "jsonp";
+	args.format = 'jsonp';
 	
 	console.log("ECHONEST: " + "http://developer.echonest.com/api/v4/" + method, args);
 	$.ajax({
 		dataType: "jsonp",
 		cache: false,
 		data: args,
+        traditional: true,
+        type: 'GET',
 		url: "http://developer.echonest.com/api/v4/" + method,
 		success: function (data) {
 			console.log("ECHONEST: Received data", data);
