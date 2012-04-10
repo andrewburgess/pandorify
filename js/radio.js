@@ -4,6 +4,9 @@ function Radio() {
     this.sessionId = "";
     
     this.playlist = new models.Playlist();
+    this.playlist.observe(models.EVENT.LOAD, function() {
+        console.log("Playlist loaded!");
+    });
     this.playerImage = new views.Player();
     this.playerImage.context = this.playlist;
     
@@ -77,8 +80,10 @@ function Radio() {
         if (params.tracks) {
             for (var i = 0; i < params.tracks.length; i++) {
                 console.log("Adding track: " + params.tracks[i].artist_name + " - " + params.tracks[i].title, params.tracks[i]);
-                if (player.track == null || player.track.uri !== params.tracks[i].tracks[0].foreign_id.sp())
-                    self.playlist.add(params.tracks[i].tracks[0].foreign_id.sp());
+                if (params.tracks[i].tracks) {
+                    if (player.track == null || player.track.uri !== params.tracks[i].tracks[0].foreign_id.sp())
+                        self.playlist.add(params.tracks[i].tracks[0].foreign_id.sp());
+                }
             }
         }
         
@@ -88,8 +93,10 @@ function Radio() {
         
         if (params.lookahead) {
             for (var i = 0; i < params.lookahead.length; i++) {
-                console.log("Adding track: " + params.lookahead[i].artist_name + " - " + params.lookahead[i].title, params.lookahead[i]);
-                self.playlist.add(params.lookahead[i].tracks[0].foreign_id.sp());
+                if (params.lookahead[i].tracks) {
+                    console.log("Adding track: " + params.lookahead[i].artist_name + " - " + params.lookahead[i].title, params.lookahead[i]);
+                    self.playlist.add(params.lookahead[i].tracks[0].foreign_id.sp());
+                }
             }
         }
     };
@@ -97,14 +104,9 @@ function Radio() {
     self.getNextTrack = function(params, extra) {
         console.log("PANDORIFY: getNextTrack", params);
         params.session_id = self.sessionId;
-        params.lookahead = 2;
+        params.lookahead = 1;
         params.results = 1;
-        echonest.makeRequest("playlist/dynamic/next", params, function(data) {    
-            //Make sure that the current track is right
-            if (isRadioPlaying() && player.track.uri !== data.songs[0].tracks[0].foreign_id.sp()) {
-                console.error("Track is unexpected!")
-            }
-            
+        echonest.makeRequest("playlist/dynamic/next", params, function(data) {            
             self.setNextTrack({tracks: data.songs, lookahead: data.lookahead});
             
             //self.getSessionInfo();
