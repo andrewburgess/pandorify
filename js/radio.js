@@ -133,7 +133,7 @@ function Radio() {
         sp.trackPlayer.setContextCanRepeat(self.playlist.uri, false);
         sp.trackPlayer.setContextCanShuffle(self.playlist.uri, false);
         
-        player.play(self.playlist.get(0).uri, self.playlist.uri, 0);
+        player.play(self.playlist.get(0), self.playlist, 0);
     };
     
     self.getSessionInfo = function() {
@@ -160,4 +160,3 @@ function Radio() {
         return player.context == self.playlist.uri;
     };
 }
-
