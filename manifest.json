@@ -1,5 +1,6 @@
 {
     "BundleType": "Application",
+    "BundleIdentifier": "pandorify",
     "AppIcon": {
         "36x18": "tutorial.png"
     },
