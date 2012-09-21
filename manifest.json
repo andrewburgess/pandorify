@@ -11,7 +11,9 @@
         "en"
     ],
 	"RequiredPermissions": [
-		"http://*.echonest.com"
+		"http://*.echonest.com",
+        "http://*.googleapis.com",
+        "http://*.googleusercontent.com"
 	],
 	"ApiPermissions": {
 		"core": ["private"]

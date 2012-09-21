@@ -1,4 +1,4 @@
-function Echonest() = {
+function Echonest() {
 	this.key = 'HRKVFLJESXBJLUDBQ';
 	this.url = 'http://developer.echonest.com/api/v4/';
 }

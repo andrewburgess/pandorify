@@ -1818,7 +1818,7 @@ table [class*=span],
   *margin-right: .3em;
   line-height: 14px;
   vertical-align: text-top;
-  background-image: url("../img/glyphicons-halflings.png");
+  background-image: url("img/glyphicons-halflings.png");
   background-position: 14px 14px;
   background-repeat: no-repeat;
   margin-top: 1px;
@@ -1838,7 +1838,7 @@ table [class*=span],
 .dropdown-menu > li > a:hover > [class*=" icon-"],
 .dropdown-menu > .active > a > [class^="icon-"],
 .dropdown-menu > .active > a > [class*=" icon-"] {
-  background-image: url("../img/glyphicons-halflings-white.png");
+  background-image: url("img/glyphicons-halflings-white.png");
 }
 .icon-glass {
   background-position: 0      0;
@@ -4919,4 +4919,13 @@ a.badge:hover {
 }
 .affix {
   position: fixed;
+}
+#header {
+  background: -webkit-linear-gradient(top, #b5bdc8 0%, #828c95 36%, #28343b 100%);
+  height: 64px;
+  margin: -10px 0px 0px 0px;
+}
+#header h1 {
+  padding: 10px 0px 0px 15px;
+  font-size: 36px;
 }
