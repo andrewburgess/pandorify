@@ -1,5 +1,6 @@
 {
     "BundleType": "Application",
+    "BundleIdentifier": "pandorify",
     "AppIcon": {
         "36x18": "tutorial.png"
     },
@@ -14,19 +15,5 @@
 	],
 	"ApiPermissions": {
 		"core": ["private"]
-	},
-	"DefaultTabs": [
-		{
-			"arguments": "create",
-			"title": {
-				"en": "Create Station"
-			}
-		},
-		{
-			"arguments": "radio",
-			"title": {
-				"en": "Radio"
-			}
-        }
-	]
+	}
 }
